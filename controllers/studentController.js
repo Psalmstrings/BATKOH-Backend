@@ -59,3 +59,61 @@ exports.getStudentByStateResidence = async (req, res) => {
         res.status(500).json({ msg: "No student in this state of residence" });
     }
 };
+
+exports.searchByVolunteerPost = async (req, res) => {
+  try {
+    const { volunteerPost } = req.query;
+
+    // Allowed posts (MUST match your schema)
+    const allowedPosts = [
+      "Director",
+      "State Coordinator",
+      "Deputy Coordinator",
+      "State Working Committee",
+      "Campus Coordinators",
+      "Campus Captains",
+      "Members"
+    ];
+
+    // 1. validate query
+    if (!volunteerPost) {
+      return res.status(400).json({
+        success: false,
+        message: "volunteerPost query parameter is required"
+      });
+    }
+
+    // 2. validate it's one of the allowed values
+    if (!allowedPosts.includes(volunteerPost)) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid volunteerPost. Allowed values: ${allowedPosts.join(", ")}`
+      });
+    }
+
+    // 3. EXACT FILTER (no regex, no fallback)
+    const students = await Student.find({ volunteerPost: volunteerPost });
+
+    // 4. if none found
+    if (students.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: `No users found with volunteerPost: ${volunteerPost}`,
+      });
+    }
+
+    // 5. success
+    res.status(200).json({
+      success: true,
+      count: students.length,
+      data: students,
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message,
+    });
+  }
+};

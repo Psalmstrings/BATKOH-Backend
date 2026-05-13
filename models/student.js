@@ -8,6 +8,7 @@ const studentSchema = new mongoose.Schema({
         match: [/^[A-Za-z\s]+$/, "Full name should only contain letters and spaces"]
     },
     dob: { type: Date, required: true },
+
     email: { 
         type: String, 
         required: true, 
@@ -16,23 +17,39 @@ const studentSchema = new mongoose.Schema({
         trim: true,
         match: [/.+\@.+\..+/, "Please provide a valid email address"]
     },
+
     gender: { 
         type: String, 
         required: true, 
         enum: ["Male", "Female", "Other"]
     },
+
     phone: { 
         type: String, 
         required: true, 
         trim: true,
         match: [/^\d{10,15}$/, "Please provide a valid phone number"]
     },
+
     lgaOrigin: { type: String, required: true },
     stateOrigin: { type: String, required: true },
     address: { type: String, required: true },
     stateResidence: { type: String, required: true },
     institution: { type: String, required: true },
     course: { type: String, required: true },
+    volunteerPost: {
+        type: String,
+        required: true,
+        enum: [
+            "Director",
+            "State Coordinator",
+            "Deputy Coordinator",
+            "State Working Committee",
+            "Campus Coordinators",
+            "Campus Captains",
+            "Members"
+        ]
+    },
     receivedBursary: { type: Boolean, default: false }
 }, { timestamps: true });
 
