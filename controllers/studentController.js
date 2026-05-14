@@ -1,16 +1,75 @@
 const Student = require("../models/student");
+const crypto = require("crypto");
+
+// Function to generate coupon codes
+const generateCoupon = (fullName) => {
+    // Extract first name only
+    const firstName = fullName.split(" ")[0].toUpperCase();
+
+    // Generate 4 random digits
+    const randomDigits = Math.floor(1000 + Math.random() * 9000);
+
+    return `${firstName}${randomDigits}`;
+};
 
 exports.createStudent = async (req, res) => {
   try {
-    const student = await Student.create(req.body);
+    const body = req.body;
+    const volunteerPost = body.volunteerPost;
+
+    // Normalize input
+    if (body.usedCouponCode) {
+      body.usedCouponCode = body.usedCouponCode.trim().toUpperCase();
+    }
+
+    // 1. Campus Coordinator → generate coupon
+    if (volunteerPost === "Campus Coordinators") {
+      body.couponCode = generateCoupon(body.fullName);
+    }
+
+    // 2. Members MUST provide coupon code
+    if (volunteerPost === "Members") {
+
+      if (!body.usedCouponCode) {
+        return res.status(400).json({
+          success: false,
+          message: "referrerCode is required for members"
+        });
+      }
+
+      // 3. Find coordinator by couponCode
+      const coordinator = await Student.findOne({
+        couponCode: body.usedCouponCode
+      });
+
+      if (!coordinator) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid referrerCode. No coordinator found."
+        });
+      }
+
+      // 4. Link member to coordinator
+      body.referredBy = coordinator._id;
+    }
+
+    // 5. Create student
+    const student = await Student.create(body);
 
     res.status(201).json({
-      status: "success",
+      success: true,
+      message: "Registration successful",
       data: student
     });
 
-  } catch (err) {
-    res.status(400).json({ msg: err.message });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message,
+    });
   }
 };
 
@@ -107,6 +166,59 @@ exports.searchByVolunteerPost = async (req, res) => {
       success: true,
       count: students.length,
       data: students,
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message,
+    });
+  }
+};
+
+exports.getMembersUnderCoordinator = async (req, res) => {
+  try {
+    const { couponCode } = req.query;
+
+    // 1. Validate query
+    if (!couponCode) {
+      return res.status(400).json({
+        success: false,
+        message: "couponCode query parameter is required",
+      });
+    }
+
+    // 2. Find coordinator with this coupon
+    const coordinator = await Student.findOne({ couponCode });
+
+    if (!coordinator) {
+      return res.status(404).json({
+        success: false,
+        message: `No coordinator found with couponCode: ${couponCode}`,
+      });
+    }
+
+    // 3. Find members who used this coupon
+    const members = await Student.find({ usedCouponCode: couponCode });
+
+    if (members.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: `No members found who used couponCode: ${couponCode}`,
+      });
+    }
+
+    // 4. Success
+    res.status(200).json({
+      success: true,
+      coordinator: {
+        id: coordinator._id,
+        name: coordinator.fullName,
+        couponCode: coordinator.couponCode,
+      },
+      count: members.length,
+        members,
     });
 
   } catch (error) {

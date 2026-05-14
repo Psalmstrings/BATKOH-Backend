@@ -6,7 +6,8 @@ const {
   getStudentBySchool,
   getStudentByState,
   getStudentByStateResidence,
-  searchByVolunteerPost
+  searchByVolunteerPost,
+    getMembersUnderCoordinator
 } = require("../controllers/studentController");
 const checkExistingStudent = require("../middlewares/checkExistingStudent");
 const router = express.Router();
@@ -15,6 +16,7 @@ const router = express.Router();
 router.get("/search", searchByVolunteerPost);
 
 router.post("/", checkExistingStudent, createStudent);
+router.get("/members", getMembersUnderCoordinator);
 router.get("/", getStudents);
 router.get("/state/:stateOrigin", getStudentByState);
 router.get("/lga/:lgaOrigin", getStudentByLga);

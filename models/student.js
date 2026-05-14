@@ -1,34 +1,33 @@
 const mongoose = require("mongoose");
 
-const studentSchema = new mongoose.Schema({
+const studentSchema = new mongoose.Schema(
+{
     fullName: { 
         type: String, 
         required: true, 
         trim: true,
-        match: [/^[A-Za-z\s]+$/, "Full name should only contain letters and spaces"]
     },
+
     dob: { type: Date, required: true },
 
     email: { 
         type: String, 
         required: true, 
         unique: true, 
-        lowercase: true,
-        trim: true,
-        match: [/.+\@.+\..+/, "Please provide a valid email address"]
+        lowercase: true, 
+        trim: true 
     },
 
     gender: { 
         type: String, 
         required: true, 
-        enum: ["Male", "Female", "Other"]
+        enum: ["Male", "Female", "Other"] 
     },
 
     phone: { 
         type: String, 
         required: true, 
         trim: true,
-        match: [/^\d{10,15}$/, "Please provide a valid phone number"]
     },
 
     lgaOrigin: { type: String, required: true },
@@ -37,6 +36,7 @@ const studentSchema = new mongoose.Schema({
     stateResidence: { type: String, required: true },
     institution: { type: String, required: true },
     course: { type: String, required: true },
+
     volunteerPost: {
         type: String,
         required: true,
@@ -50,7 +50,32 @@ const studentSchema = new mongoose.Schema({
             "Members"
         ]
     },
-    receivedBursary: { type: Boolean, default: false }
-}, { timestamps: true });
+
+    /**
+     * COUPON SYSTEM FIELDS
+     */
+
+    // Only Campus Coordinators get this
+   couponCode: {
+        type: String,
+        unique: true,
+        sparse: true
+        },
+
+        usedCouponCode: {
+        type: String,
+        index: true
+        },
+
+    // Links a member directly to a coordinator (ObjectId)
+    referredBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Student",
+    },
+
+    receivedBursary: { type: Boolean, default: false },
+},
+{ timestamps: true }
+);
 
 module.exports = mongoose.model("Student", studentSchema);
