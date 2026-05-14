@@ -23,7 +23,7 @@ exports.createStudent = async (req, res) => {
     }
 
     // 1. Campus Coordinator → generate coupon
-    if (volunteerPost === "Campus Coordinators") {
+    if (volunteerPost === "Campus Captains") {
       body.couponCode = generateCoupon(body.fullName);
     }
 
@@ -38,19 +38,19 @@ exports.createStudent = async (req, res) => {
       }
 
       // 3. Find coordinator by couponCode
-      const coordinator = await Student.findOne({
+      const captain = await Student.findOne({
         couponCode: body.usedCouponCode
       });
 
-      if (!coordinator) {
+      if (!captain) {
         return res.status(400).json({
           success: false,
-          message: "Invalid referrerCode. No coordinator found."
+          message: "Invalid referrerCode. No captain found."
         });
       }
 
       // 4. Link member to coordinator
-      body.referredBy = coordinator._id;
+      body.referredBy = captain._id;
     }
 
     // 5. Create student
@@ -190,12 +190,12 @@ exports.getMembersUnderCoordinator = async (req, res) => {
     }
 
     // 2. Find coordinator with this coupon
-    const coordinator = await Student.findOne({ couponCode });
+    const captain = await Student.findOne({ couponCode });
 
-    if (!coordinator) {
+    if (!captain) {
       return res.status(404).json({
         success: false,
-        message: `No coordinator found with couponCode: ${couponCode}`,
+        message: `No captain found with couponCode: ${couponCode}`,
       });
     }
 
@@ -212,10 +212,10 @@ exports.getMembersUnderCoordinator = async (req, res) => {
     // 4. Success
     res.status(200).json({
       success: true,
-      coordinator: {
-        id: coordinator._id,
-        name: coordinator.fullName,
-        couponCode: coordinator.couponCode,
+      captain: {
+        id: captain._id,
+        name: captain.fullName,
+        couponCode: captain.couponCode,
       },
       count: members.length,
         members,
