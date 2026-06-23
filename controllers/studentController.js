@@ -73,7 +73,6 @@ exports.createStudent = async (req, res) => {
   }
 };
 
-
 exports.getStudents = async (req, res) => {
     try {
         const students = await Student.find();
@@ -83,39 +82,206 @@ exports.getStudents = async (req, res) => {
     }
 };
 
+// ========================
+// GET SINGLE STUDENT BY ID
+// ========================
+exports.getSingleStudent = async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        if (!id) {
+            return res.status(400).json({ 
+                success: false, 
+                msg: "Student ID is required" 
+            });
+        }
+        
+        const student = await Student.findById(id);
+        
+        if (!student) {
+            return res.status(404).json({ 
+                success: false, 
+                msg: "Student not found with the provided ID" 
+            });
+        }
+        
+        res.status(200).json({
+            success: true,
+            data: student
+        });
+        
+    } catch (err) {
+        if (err.name === 'CastError') {
+            return res.status(400).json({ 
+                success: false, 
+                msg: "Invalid student ID format" 
+            });
+        }
+        res.status(500).json({ 
+            success: false, 
+            msg: err.message 
+        });
+    }
+};
+
+// ========================
+// SEARCH STUDENTS BY NAME (Case-insensitive partial match)
+// ========================
+exports.searchByName = async (req, res) => {
+    try {
+        const { name } = req.query;
+
+        // Validate query
+        if (!name || name.trim() === '') {
+            return res.status(400).json({
+                success: false,
+                message: "Name query parameter is required"
+            });
+        }
+
+        // Create a case-insensitive regex for partial matching
+        const searchRegex = new RegExp(name.trim(), 'i');
+        
+        // Search for students where fullName matches the regex
+        const students = await Student.find({
+            fullName: searchRegex
+        });
+
+        // If none found
+        if (students.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: `No students found with name containing: ${name}`
+            });
+        }
+
+        // Success
+        res.status(200).json({
+            success: true,
+            count: students.length,
+            data: students
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Server error",
+            error: error.message
+        });
+    }
+};
+
+// ========================
+// DELETE STUDENT BY ID
+// ========================
+exports.deleteStudent = async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        // Validate if ID is provided
+        if (!id) {
+            return res.status(400).json({
+                success: false,
+                message: "Student ID is required"
+            });
+        }
+        
+        // Find and delete the student by ID
+        const deletedStudent = await Student.findByIdAndDelete(id);
+        
+        // Check if student exists
+        if (!deletedStudent) {
+            return res.status(404).json({
+                success: false,
+                message: "Student not found with the provided ID"
+            });
+        }
+        
+        // Check if this student is a Campus Captain with coupon code
+        // If so, we should also handle deletion of members linked to this captain
+        if (deletedStudent.volunteerPost === "Campus Captains" && deletedStudent.couponCode) {
+            // Unlink members who used this coupon code
+            await Student.updateMany(
+                { usedCouponCode: deletedStudent.couponCode },
+                { $unset: { referredBy: "" } }
+            );
+            
+            // Return success with additional info about members unlinked
+            return res.status(200).json({
+                success: true,
+                message: `Student deleted successfully. Members who used coupon code '${deletedStudent.couponCode}' have been unlinked.`,
+                data: deletedStudent
+            });
+        }
+        
+        // Success response for regular deletion
+        res.status(200).json({
+            success: true,
+            message: "Student deleted successfully",
+            data: deletedStudent
+        });
+        
+    } catch (err) {
+        // Handle invalid ObjectId format
+        if (err.name === 'CastError') {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid student ID format"
+            });
+        }
+        res.status(500).json({
+            success: false,
+            message: "Server error",
+            error: err.message
+        });
+    }
+};
+
 exports.getStudentByState = async (req, res) => {
     try {
         const students = await Student.find({ stateOrigin: req.params.stateOrigin });
+        if (students.length === 0) {
+            return res.status(404).json({ msg: "No student found in this state" });
+        }
         res.json(students);
     } catch (err) {
-        res.status(500).json({ msg: "No student in this state" });
+        res.status(500).json({ msg: err.message });
     }
 };
 
 exports.getStudentByLga = async (req, res) => {
     try {
         const students = await Student.find({ lgaOrigin: req.params.lgaOrigin });
+        if (students.length === 0) {
+            return res.status(404).json({ msg: "No student found in this Local Government" });
+        }
         res.json(students);
     } catch (err) {
-        res.status(500).json({ msg: "No student in this Local Government" });
+        res.status(500).json({ msg: err.message });
     }
 };
 
 exports.getStudentBySchool = async (req, res) => {
     try{ 
         const students = await Student.find({ institution: req.params.institution });
+        if (students.length === 0) {
+            return res.status(404).json({ msg: "No student found in this institution" });
+        }
         res.json(students);
     } catch (err) {
-        res.status(500).json({ msg: "No student in this institution" });
+        res.status(500).json({ msg: err.message });
     }
 };
 
 exports.getStudentByStateResidence = async (req, res) => {
     try {
         const students = await Student.find({ stateResidence: req.params.stateResidence });
+        if (students.length === 0) {
+            return res.status(404).json({ msg: "No student found in this state of residence" });
+        }
         res.json(students);
     } catch (err) {
-        res.status(500).json({ msg: "No student in this state of residence" });
+        res.status(500).json({ msg: err.message });
     }
 };
 
