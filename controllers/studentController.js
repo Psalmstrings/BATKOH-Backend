@@ -45,30 +45,7 @@ const generateCampusCoordinatorCode = async (fullName) => {
 };
 
 
-// =====================================================
-// NFSAN COORDINATOR CODE
-// FORMAT: FemaleWing763
-// =====================================================
-const generateNFSANCoordinatorCode = async () => {
-    const wings = [
-        "FemaleWing"
-    ];
 
-    let code;
-    let exists = true;
-
-    while (exists) {
-        const wing = wings[Math.floor(Math.random() * wings.length)];
-
-        code = `${wing}${generateRandomNumber(3)}`;
-
-        exists = await Student.exists({
-            couponCode: code
-        });
-    }
-
-    return code;
-};
 
 
 // =====================================================
@@ -128,18 +105,6 @@ exports.createStudent = async (req, res) => {
 
             body.couponCode =
                 await generateCampusCoordinatorCode(fullName);
-        }
-
-
-        // =================================================
-        // NFSAN COORDINATOR
-        // Automatically gets:
-        // FemaleWing763
-        // =================================================
-        else if (volunteerPost === "NFSAN Coordinator") {
-
-            body.couponCode =
-                await generateNFSANCoordinatorCode();
         }
 
 

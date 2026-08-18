@@ -53,9 +53,21 @@ const studentSchema = new mongoose.Schema(
       required: true,
     },
 
-    institution: {
-      type: String,
-      required: true,
+   institution: {
+    type: String,
+    required: true,
+    enum: [
+        "UNILAG",
+        "YABATECH",
+        "LASU",
+        "FCE",
+        "OCEANOGRAPHY",
+        "SACOED",
+        "LASCON",
+        "LASCOETH",
+        "LASUSTECH",
+        "LASUED",
+    ],
     },
 
     course: {
@@ -74,7 +86,6 @@ const studentSchema = new mongoose.Schema(
         "Campus Coordinators",
         "Campus Captains",
         "Members",
-        "NFSAN Coordinator",
         "NFSAN Member",
       ],
     },
