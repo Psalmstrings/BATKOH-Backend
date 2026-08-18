@@ -1,81 +1,129 @@
 const mongoose = require("mongoose");
 
 const studentSchema = new mongoose.Schema(
-{
-    fullName: { 
-        type: String, 
-        required: true, 
-        trim: true,
+  {
+    fullName: {
+      type: String,
+      required: true,
+      trim: true,
     },
 
-    dob: { type: Date, required: true },
-
-    email: { 
-        type: String, 
-        required: true, 
-        unique: true, 
-        lowercase: true, 
-        trim: true 
+    dob: {
+      type: Date,
+      required: true,
     },
 
-    gender: { 
-        type: String, 
-        required: true, 
-        enum: ["Male", "Female", "Other"] 
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
     },
 
-    phone: { 
-        type: String, 
-        required: true, 
-        trim: true,
+    gender: {
+      type: String,
+      required: true,
+      enum: ["Male", "Female", "Other"],
     },
 
-    lgaOrigin: { type: String, required: true },
-    stateOrigin: { type: String, required: true },
-    address: { type: String, required: true },
-    stateResidence: { type: String, required: true },
-    institution: { type: String, required: true },
-    course: { type: String, required: true },
+    phone: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    lgaOrigin: {
+      type: String,
+      required: true,
+    },
+
+    stateOrigin: {
+      type: String,
+      required: true,
+    },
+
+    address: {
+      type: String,
+      required: true,
+    },
+
+    stateResidence: {
+      type: String,
+      required: true,
+    },
+
+    institution: {
+      type: String,
+      required: true,
+    },
+
+    course: {
+      type: String,
+      required: true,
+    },
 
     volunteerPost: {
-        type: String,
-        required: true,
-        enum: [
-            "Director",
-            "State Coordinator",
-            "Deputy Coordinator",
-            "State Working Committee",
-            "Campus Coordinators",
-            "Campus Captains",
-            "Members"
-        ]
+      type: String,
+      required: true,
+      enum: [
+        "Director",
+        "State Coordinator",
+        "Deputy Coordinator",
+        "State Working Committee",
+        "Campus Coordinators",
+        "Campus Captains",
+        "Members",
+        "NFSAN Coordinator",
+        "NFSAN Member",
+      ],
     },
 
     /**
-     * COUPON SYSTEM FIELDS
+     * REFERRAL / COUPON SYSTEM
      */
 
-    // Only Campus Coordinators get this
-   couponCode: {
-        type: String,
-        unique: true,
-        sparse: true
-        },
-
-        usedCouponCode: {
-        type: String,
-        index: true
-        },
-
-    // Links a member directly to a coordinator (ObjectId)
-    referredBy: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Student",
+    // Unique referral code.
+    // Generated for:
+    // - Campus Coordinators
+    // - NFSAN Coordinators
+    couponCode: {
+      type: String,
+      unique: true,
+      sparse: true,
+      trim: true,
+      uppercase: true,
+      index: true,
     },
 
-    receivedBursary: { type: Boolean, default: false },
-},
-{ timestamps: true }
+    // Code entered by a member during registration.
+    // Used by:
+    // - Members
+    // - NFSAN Members
+    usedCouponCode: {
+      type: String,
+      trim: true,
+      uppercase: true,
+      index: true,
+    },
+
+    // The coordinator who referred this member.
+    referredBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Student",
+      default: null,
+    },
+
+    receivedBursary: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  {
+    timestamps: true,
+  }
 );
 
-module.exports = mongoose.model("Student", studentSchema);
+module.exports =
+    mongoose.models.Student ||
+    mongoose.model("Student", studentSchema);

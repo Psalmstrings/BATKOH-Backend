@@ -1,77 +1,313 @@
 const Student = require("../models/student");
-const crypto = require("crypto");
 
-// Function to generate coupon codes
-const generateCoupon = (fullName) => {
-    // Extract first name only
-    const firstName = fullName.split(" ")[0].toUpperCase();
-
-    // Generate 4 random digits
-    const randomDigits = Math.floor(1000 + Math.random() * 9000);
-
-    return `${firstName}${randomDigits}`;
+// =====================================================
+// CLEAN FIRST NAME
+// =====================================================
+const getFirstName = (fullName) => {
+    return fullName
+        .trim()
+        .split(/\s+/)[0]
+        .replace(/[^a-zA-Z]/g, "");
 };
 
+
+// =====================================================
+// RANDOM NUMBER
+// =====================================================
+const generateRandomNumber = (length = 4) => {
+    const min = Math.pow(10, length - 1);
+    const max = Math.pow(10, length) - 1;
+
+    return Math.floor(min + Math.random() * (max - min + 1));
+};
+
+
+// =====================================================
+// CAMPUS COORDINATOR CODE
+// FORMAT: CC-FirstName1234
+// Example: CC-John4821
+// =====================================================
+const generateCampusCoordinatorCode = async (fullName) => {
+    const firstName = getFirstName(fullName);
+
+    let code;
+    let exists = true;
+
+    while (exists) {
+        code = `CC-${firstName}${generateRandomNumber(4)}`;
+
+        exists = await Student.exists({
+            couponCode: code
+        });
+    }
+
+    return code;
+};
+
+
+// =====================================================
+// NFSAN COORDINATOR CODE
+// FORMAT: FemaleWing763
+// =====================================================
+const generateNFSANCoordinatorCode = async () => {
+    const wings = [
+        "FemaleWing"
+    ];
+
+    let code;
+    let exists = true;
+
+    while (exists) {
+        const wing = wings[Math.floor(Math.random() * wings.length)];
+
+        code = `${wing}${generateRandomNumber(3)}`;
+
+        exists = await Student.exists({
+            couponCode: code
+        });
+    }
+
+    return code;
+};
+
+
+// =====================================================
+// CAMPUS CAPTAIN CODE
+// FORMAT: FirstName1234
+// Example: John4821
+// =====================================================
+const generateCampusCaptainCode = async (fullName) => {
+    const firstName = getFirstName(fullName);
+
+    let code;
+    let exists = true;
+
+    while (exists) {
+        code = `${firstName}${generateRandomNumber(4)}`;
+
+        exists = await Student.exists({
+            couponCode: code
+        });
+    }
+
+    return code;
+};
+
+
+// =====================================================
+// CREATE STUDENT
+// =====================================================
 exports.createStudent = async (req, res) => {
-  try {
-    const body = req.body;
-    const volunteerPost = body.volunteerPost;
+    try {
+        const body = { ...req.body };
 
-    // Normalize input
-    if (body.usedCouponCode) {
-      body.usedCouponCode = body.usedCouponCode.trim().toUpperCase();
-    }
+        const {
+            fullName,
+            volunteerPost,
+            usedCouponCode
+        } = body;
 
-    // 1. Campus Coordinator → generate coupon
-    if (volunteerPost === "Campus Captains") {
-      body.couponCode = generateCoupon(body.fullName);
-    }
 
-    // 2. Members MUST provide coupon code
-    if (volunteerPost === "Members") {
+        // =================================================
+        // BASIC VALIDATION
+        // =================================================
+        if (!fullName || !volunteerPost) {
+            return res.status(400).json({
+                success: false,
+                message: "Full name and volunteer position are required."
+            });
+        }
 
-      if (!body.usedCouponCode) {
-        return res.status(400).json({
-          success: false,
-          message: "referrerCode is required for members"
+
+        // =================================================
+        // CAMPUS COORDINATOR
+        // Automatically gets:
+        // CC-FirstName1234
+        // =================================================
+        if (volunteerPost === "Campus Coordinators") {
+
+            body.couponCode =
+                await generateCampusCoordinatorCode(fullName);
+        }
+
+
+        // =================================================
+        // NFSAN COORDINATOR
+        // Automatically gets:
+        // FemaleWing763
+        // =================================================
+        else if (volunteerPost === "NFSAN Coordinator") {
+
+            body.couponCode =
+                await generateNFSANCoordinatorCode();
+        }
+
+
+        // =================================================
+        // CAMPUS CAPTAIN
+        //
+        // Must provide Campus Coordinator code
+        // =================================================
+        else if (volunteerPost === "Campus Captains") {
+
+            if (!usedCouponCode || usedCouponCode.trim() === "") {
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Campus Coordinator coupon code is required for Campus Captains."
+                });
+            }
+
+            const coordinator = await Student.findOne({
+                couponCode: usedCouponCode.trim(),
+                volunteerPost: "Campus Coordinators"
+            });
+
+            if (!coordinator) {
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Invalid Campus Coordinator coupon code."
+                });
+            }
+
+            // Generate Captain's own unique code
+            body.couponCode =
+                await generateCampusCaptainCode(fullName);
+
+            // Store the code they used
+            body.usedCouponCode = usedCouponCode.trim();
+
+            // Link captain to coordinator
+            body.referredBy = coordinator._id;
+        }
+
+
+        // =================================================
+        // MEMBER
+        //
+        // Member can use:
+        // 1. NFSAN Coordinator code
+        // OR
+        // 2. Campus Captain code
+        // =================================================
+        else if (volunteerPost === "Members") {
+
+            if (!usedCouponCode || usedCouponCode.trim() === "") {
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "NFSAN Coordinator or Campus Captain code is required for Members."
+                });
+            }
+
+            const code = usedCouponCode.trim();
+
+
+            // ---------------------------------------------
+            // Check NFSAN Coordinator
+            // ---------------------------------------------
+            let referrer = await Student.findOne({
+                couponCode: code,
+                volunteerPost: "NFSAN Coordinator"
+            });
+
+
+            // ---------------------------------------------
+            // If not NFSAN Coordinator, check Captain
+            // ---------------------------------------------
+            if (!referrer) {
+                referrer = await Student.findOne({
+                    couponCode: code,
+                    volunteerPost: "Campus Captains"
+                });
+            }
+
+
+            // ---------------------------------------------
+            // Invalid code
+            // ---------------------------------------------
+            if (!referrer) {
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Invalid code. Please provide a valid NFSAN Coordinator or Campus Captain code."
+                });
+            }
+
+
+            // Store the code used
+            body.usedCouponCode = code;
+
+            // Link member to referrer
+            body.referredBy = referrer._id;
+        }
+
+
+        // =================================================
+        // REMOVE EMPTY CODE VALUES
+        // =================================================
+        if (!body.couponCode) {
+            delete body.couponCode;
+        }
+
+
+        // =================================================
+        // CREATE STUDENT
+        // =================================================
+        const student = await Student.create(body);
+
+
+        // =================================================
+        // RESPONSE
+        // =================================================
+        return res.status(201).json({
+            success: true,
+            message: "Registration successful.",
+            data: student
         });
-      }
 
-      // 3. Find coordinator by couponCode
-      const captain = await Student.findOne({
-        couponCode: body.usedCouponCode
-      });
 
-      if (!captain) {
-        return res.status(400).json({
-          success: false,
-          message: "Invalid referrerCode. No captain found."
+    } catch (error) {
+
+        console.error("CREATE STUDENT ERROR:", error);
+
+
+        // MongoDB duplicate key
+        if (error.code === 11000) {
+
+            const duplicateField =
+                Object.keys(error.keyPattern || {})[0];
+
+            return res.status(409).json({
+                success: false,
+                message:
+                    `A student with this ${duplicateField || "unique field"} already exists.`,
+                error: error.message
+            });
+        }
+
+
+        return res.status(500).json({
+            success: false,
+            message: "Server error.",
+            error: error.message
         });
-      }
-
-      // 4. Link member to coordinator
-      body.referredBy = captain._id;
     }
-
-    // 5. Create student
-    const student = await Student.create(body);
-
-    res.status(201).json({
-      success: true,
-      message: "Registration successful",
-      data: student
-    });
-
-  } catch (error) {
-    console.error(error);
-
-    res.status(500).json({
-      success: false,
-      message: "Server error",
-      error: error.message,
-    });
-  }
 };
+
+
+// =====================================================
+// EXPORT GENERATORS IF NEEDED ELSEWHERE
+// =====================================================
+// exports.generateCampusCoordinatorCode =
+//     generateCampusCoordinatorCode;
+
+// exports.generateNFSANCoordinatorCode =
+//     generateNFSANCoordinatorCode;
+
+// exports.generateCampusCaptainCode =
+//     generateCampusCaptainCode;
 
 exports.getStudents = async (req, res) => {
     try {
