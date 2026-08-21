@@ -10,7 +10,6 @@ const getFirstName = (fullName) => {
         .replace(/[^a-zA-Z]/g, "");
 };
 
-
 // =====================================================
 // RANDOM NUMBER
 // =====================================================
@@ -24,8 +23,8 @@ const generateRandomNumber = (length = 4) => {
 
 // =====================================================
 // CAMPUS COORDINATOR CODE
-// FORMAT: CC-FirstName1234
-// Example: CC-John4821
+// FORMAT: DR-FirstName1234
+// Example: DR-John4821
 // =====================================================
 const generateCampusCoordinatorCode = async (fullName) => {
     const firstName = getFirstName(fullName);
@@ -34,7 +33,7 @@ const generateCampusCoordinatorCode = async (fullName) => {
     let exists = true;
 
     while (exists) {
-        code = `CC-${firstName}${generateRandomNumber(4)}`;
+        code = `DR-${firstName}${generateRandomNumber(4)}`;
 
         exists = await Student.exists({
             couponCode: code
@@ -45,13 +44,10 @@ const generateCampusCoordinatorCode = async (fullName) => {
 };
 
 
-
-
-
 // =====================================================
 // CAMPUS CAPTAIN CODE
-// FORMAT: FirstName1234
-// Example: John4821
+// FORMAT: NELFUND-1234
+// Example: NELFUND-4821
 // =====================================================
 const generateCampusCaptainCode = async (fullName) => {
     const firstName = getFirstName(fullName);
@@ -60,7 +56,7 @@ const generateCampusCaptainCode = async (fullName) => {
     let exists = true;
 
     while (exists) {
-        code = `${firstName}${generateRandomNumber(4)}`;
+        code = `NELFUND-${generateRandomNumber(4)}`;
 
         exists = await Student.exists({
             couponCode: code
@@ -98,8 +94,9 @@ exports.createStudent = async (req, res) => {
 
         // =================================================
         // CAMPUS COORDINATOR
+        //
         // Automatically gets:
-        // CC-FirstName1234
+        // DR-FirstName1234
         // =================================================
         if (volunteerPost === "Campus Coordinators") {
 
@@ -140,7 +137,7 @@ exports.createStudent = async (req, res) => {
             body.couponCode =
                 await generateCampusCaptainCode(fullName);
 
-            // Store the code they used
+            // Store the code used
             body.usedCouponCode = usedCouponCode.trim();
 
             // Link captain to coordinator
@@ -152,9 +149,9 @@ exports.createStudent = async (req, res) => {
         // MEMBER
         //
         // Member can use:
-        // 1. NFSAN Coordinator code
-        // OR
+        // 1. Campus Coordinator code
         // 2. Campus Captain code
+        // 3. NFSAN Coordinator code
         // =================================================
         else if (volunteerPost === "Members") {
 
@@ -162,24 +159,27 @@ exports.createStudent = async (req, res) => {
                 return res.status(400).json({
                     success: false,
                     message:
-                        "NFSAN Coordinator or Campus Captain code is required for Members."
+                        "Campus Coordinator, Campus Captain or NFSAN Coordinator code is required for Members."
                 });
             }
 
             const code = usedCouponCode.trim();
 
+            let referrer = null;
+
 
             // ---------------------------------------------
-            // Check NFSAN Coordinator
+            // 1. CHECK CAMPUS COORDINATOR
             // ---------------------------------------------
-            let referrer = await Student.findOne({
+            referrer = await Student.findOne({
                 couponCode: code,
-                volunteerPost: "NFSAN Coordinator"
+                volunteerPost: "Campus Coordinators"
             });
 
 
             // ---------------------------------------------
-            // If not NFSAN Coordinator, check Captain
+            // 2. IF NOT CAMPUS COORDINATOR,
+            //    CHECK CAMPUS CAPTAIN
             // ---------------------------------------------
             if (!referrer) {
                 referrer = await Student.findOne({
@@ -190,21 +190,38 @@ exports.createStudent = async (req, res) => {
 
 
             // ---------------------------------------------
-            // Invalid code
+            // 3. IF NOT CAMPUS CAPTAIN,
+            //    CHECK NFSAN COORDINATOR
+            // ---------------------------------------------
+            if (!referrer) {
+                referrer = await Student.findOne({
+                    couponCode: code,
+                    volunteerPost: "NFSAN Coordinator"
+                });
+            }
+
+
+            // ---------------------------------------------
+            // 4. INVALID CODE
             // ---------------------------------------------
             if (!referrer) {
                 return res.status(400).json({
                     success: false,
                     message:
-                        "Invalid code. Please provide a valid NFSAN Coordinator or Campus Captain code."
+                        "Invalid code. Please provide a valid Campus Coordinator, Campus Captain or NFSAN Coordinator code."
                 });
             }
 
 
-            // Store the code used
+            // ---------------------------------------------
+            // STORE THE CODE USED
+            // ---------------------------------------------
             body.usedCouponCode = code;
 
-            // Link member to referrer
+
+            // ---------------------------------------------
+            // LINK MEMBER TO REFERRER
+            // ---------------------------------------------
             body.referredBy = referrer._id;
         }
 
@@ -238,7 +255,9 @@ exports.createStudent = async (req, res) => {
         console.error("CREATE STUDENT ERROR:", error);
 
 
-        // MongoDB duplicate key
+        // =================================================
+        // MONGODB DUPLICATE KEY
+        // =================================================
         if (error.code === 11000) {
 
             const duplicateField =
@@ -253,6 +272,9 @@ exports.createStudent = async (req, res) => {
         }
 
 
+        // =================================================
+        // SERVER ERROR
+        // =================================================
         return res.status(500).json({
             success: false,
             message: "Server error.",
@@ -265,6 +287,7 @@ exports.createStudent = async (req, res) => {
 // =====================================================
 // EXPORT GENERATORS IF NEEDED ELSEWHERE
 // =====================================================
+
 // exports.generateCampusCoordinatorCode =
 //     generateCampusCoordinatorCode;
 
@@ -274,89 +297,102 @@ exports.createStudent = async (req, res) => {
 // exports.generateCampusCaptainCode =
 //     generateCampusCaptainCode;
 
+
+// =====================================================
+// GET ALL STUDENTS
+// =====================================================
 exports.getStudents = async (req, res) => {
     try {
+
         const students = await Student.find();
+
         res.json(students);
+
     } catch (err) {
-        res.status(500).json({ msg: err.message });
+
+        res.status(500).json({
+            msg: err.message
+        });
     }
 };
 
-// ========================
+
+// =====================================================
 // GET SINGLE STUDENT BY ID
-// ========================
+// =====================================================
 exports.getSingleStudent = async (req, res) => {
     try {
+
         const { id } = req.params;
-        
+
         if (!id) {
-            return res.status(400).json({ 
-                success: false, 
-                msg: "Student ID is required" 
+            return res.status(400).json({
+                success: false,
+                msg: "Student ID is required"
             });
         }
-        
+
         const student = await Student.findById(id);
-        
+
         if (!student) {
-            return res.status(404).json({ 
-                success: false, 
-                msg: "Student not found with the provided ID" 
+            return res.status(404).json({
+                success: false,
+                msg: "Student not found with the provided ID"
             });
         }
-        
+
         res.status(200).json({
             success: true,
             data: student
         });
-        
+
     } catch (err) {
-        if (err.name === 'CastError') {
-            return res.status(400).json({ 
-                success: false, 
-                msg: "Invalid student ID format" 
+
+        if (err.name === "CastError") {
+            return res.status(400).json({
+                success: false,
+                msg: "Invalid student ID format"
             });
         }
-        res.status(500).json({ 
-            success: false, 
-            msg: err.message 
+
+        res.status(500).json({
+            success: false,
+            msg: err.message
         });
     }
 };
 
-// ========================
-// SEARCH STUDENTS BY NAME (Case-insensitive partial match)
-// ========================
+
+// =====================================================
+// SEARCH STUDENTS BY NAME
+// Case-insensitive partial match
+// =====================================================
 exports.searchByName = async (req, res) => {
     try {
+
         const { name } = req.query;
 
-        // Validate query
-        if (!name || name.trim() === '') {
+        if (!name || name.trim() === "") {
             return res.status(400).json({
                 success: false,
                 message: "Name query parameter is required"
             });
         }
 
-        // Create a case-insensitive regex for partial matching
-        const searchRegex = new RegExp(name.trim(), 'i');
-        
-        // Search for students where fullName matches the regex
+        const searchRegex = new RegExp(name.trim(), "i");
+
         const students = await Student.find({
             fullName: searchRegex
         });
 
-        // If none found
         if (students.length === 0) {
             return res.status(404).json({
                 success: false,
-                message: `No students found with name containing: ${name}`
+                message:
+                    `No students found with name containing: ${name}`
             });
         }
 
-        // Success
         res.status(200).json({
             success: true,
             count: students.length,
@@ -364,6 +400,7 @@ exports.searchByName = async (req, res) => {
         });
 
     } catch (error) {
+
         res.status(500).json({
             success: false,
             message: "Server error",
@@ -372,64 +409,80 @@ exports.searchByName = async (req, res) => {
     }
 };
 
-// ========================
+
+// =====================================================
 // DELETE STUDENT BY ID
-// ========================
+// =====================================================
 exports.deleteStudent = async (req, res) => {
     try {
+
         const { id } = req.params;
-        
-        // Validate if ID is provided
+
         if (!id) {
             return res.status(400).json({
                 success: false,
                 message: "Student ID is required"
             });
         }
-        
-        // Find and delete the student by ID
-        const deletedStudent = await Student.findByIdAndDelete(id);
-        
-        // Check if student exists
+
+        const deletedStudent =
+            await Student.findByIdAndDelete(id);
+
         if (!deletedStudent) {
             return res.status(404).json({
                 success: false,
                 message: "Student not found with the provided ID"
             });
         }
-        
-        // Check if this student is a Campus Captain with coupon code
-        // If so, we should also handle deletion of members linked to this captain
-        if (deletedStudent.volunteerPost === "Campus Captains" && deletedStudent.couponCode) {
-            // Unlink members who used this coupon code
+
+
+        // =================================================
+        // HANDLE CAMPUS CAPTAIN DELETION
+        // =================================================
+        if (
+            deletedStudent.volunteerPost === "Campus Captains" &&
+            deletedStudent.couponCode
+        ) {
+
             await Student.updateMany(
-                { usedCouponCode: deletedStudent.couponCode },
-                { $unset: { referredBy: "" } }
+                {
+                    usedCouponCode:
+                        deletedStudent.couponCode
+                },
+                {
+                    $unset: {
+                        referredBy: ""
+                    }
+                }
             );
-            
-            // Return success with additional info about members unlinked
+
             return res.status(200).json({
                 success: true,
-                message: `Student deleted successfully. Members who used coupon code '${deletedStudent.couponCode}' have been unlinked.`,
+                message:
+                    `Student deleted successfully. Members who used coupon code '${deletedStudent.couponCode}' have been unlinked.`,
                 data: deletedStudent
             });
         }
-        
-        // Success response for regular deletion
+
+
+        // =================================================
+        // REGULAR DELETION
+        // =================================================
         res.status(200).json({
             success: true,
             message: "Student deleted successfully",
             data: deletedStudent
         });
-        
+
     } catch (err) {
-        // Handle invalid ObjectId format
-        if (err.name === 'CastError') {
+
+        if (err.name === "CastError") {
             return res.status(400).json({
                 success: false,
                 message: "Invalid student ID format"
             });
         }
+
         res.status(500).json({
             success: false,
             message: "Server error",
@@ -438,161 +491,284 @@ exports.deleteStudent = async (req, res) => {
     }
 };
 
+
+// =====================================================
+// GET STUDENTS BY STATE OF ORIGIN
+// =====================================================
 exports.getStudentByState = async (req, res) => {
     try {
-        const students = await Student.find({ stateOrigin: req.params.stateOrigin });
+
+        const students = await Student.find({
+            stateOrigin: req.params.stateOrigin
+        });
+
         if (students.length === 0) {
-            return res.status(404).json({ msg: "No student found in this state" });
+            return res.status(404).json({
+                msg: "No student found in this state"
+            });
         }
+
         res.json(students);
+
     } catch (err) {
-        res.status(500).json({ msg: err.message });
+
+        res.status(500).json({
+            msg: err.message
+        });
     }
 };
 
+
+// =====================================================
+// GET STUDENTS BY LGA
+// =====================================================
 exports.getStudentByLga = async (req, res) => {
     try {
-        const students = await Student.find({ lgaOrigin: req.params.lgaOrigin });
+
+        const students = await Student.find({
+            lgaOrigin: req.params.lgaOrigin
+        });
+
         if (students.length === 0) {
-            return res.status(404).json({ msg: "No student found in this Local Government" });
+            return res.status(404).json({
+                msg: "No student found in this Local Government"
+            });
         }
+
         res.json(students);
+
     } catch (err) {
-        res.status(500).json({ msg: err.message });
+
+        res.status(500).json({
+            msg: err.message
+        });
     }
 };
 
+
+// =====================================================
+// GET STUDENTS BY INSTITUTION
+// =====================================================
 exports.getStudentBySchool = async (req, res) => {
-    try{ 
-        const students = await Student.find({ institution: req.params.institution });
+    try {
+
+        const students = await Student.find({
+            institution: req.params.institution
+        });
+
         if (students.length === 0) {
-            return res.status(404).json({ msg: "No student found in this institution" });
+            return res.status(404).json({
+                msg: "No student found in this institution"
+            });
         }
+
         res.json(students);
+
     } catch (err) {
-        res.status(500).json({ msg: err.message });
+
+        res.status(500).json({
+            msg: err.message
+        });
     }
 };
 
+
+// =====================================================
+// GET STUDENTS BY STATE OF RESIDENCE
+// =====================================================
 exports.getStudentByStateResidence = async (req, res) => {
     try {
-        const students = await Student.find({ stateResidence: req.params.stateResidence });
+
+        const students = await Student.find({
+            stateResidence: req.params.stateResidence
+        });
+
         if (students.length === 0) {
-            return res.status(404).json({ msg: "No student found in this state of residence" });
+            return res.status(404).json({
+                msg: "No student found in this state of residence"
+            });
         }
+
         res.json(students);
+
     } catch (err) {
-        res.status(500).json({ msg: err.message });
+
+        res.status(500).json({
+            msg: err.message
+        });
     }
 };
 
+
+// =====================================================
+// SEARCH STUDENTS BY VOLUNTEER POST
+// =====================================================
 exports.searchByVolunteerPost = async (req, res) => {
-  try {
-    const { volunteerPost } = req.query;
 
-    // Allowed posts (MUST match your schema)
-    const allowedPosts = [
-      "Director",
-      "State Coordinator",
-      "Deputy Coordinator",
-      "State Working Committee",
-      "Campus Coordinators",
-      "Campus Captains",
-      "Members"
-    ];
+    try {
 
-    // 1. validate query
-    if (!volunteerPost) {
-      return res.status(400).json({
-        success: false,
-        message: "volunteerPost query parameter is required"
-      });
+        const { volunteerPost } = req.query;
+
+
+        // =================================================
+        // ALLOWED POSTS
+        // =================================================
+        const allowedPosts = [
+            "Director",
+            "State Coordinator",
+            "Deputy Coordinator",
+            "State Working Committee",
+            "Campus Coordinators",
+            "Campus Captains",
+            "Members"
+        ];
+
+
+        // =================================================
+        // VALIDATE QUERY
+        // =================================================
+        if (!volunteerPost) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    "volunteerPost query parameter is required"
+            });
+        }
+
+
+        // =================================================
+        // VALIDATE POST
+        // =================================================
+        if (!allowedPosts.includes(volunteerPost)) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    `Invalid volunteerPost. Allowed values: ${allowedPosts.join(", ")}`
+            });
+        }
+
+
+        // =================================================
+        // EXACT FILTER
+        // =================================================
+        const students = await Student.find({
+            volunteerPost: volunteerPost
+        });
+
+
+        // =================================================
+        // NO RESULTS
+        // =================================================
+        if (students.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message:
+                    `No users found with volunteerPost: ${volunteerPost}`
+            });
+        }
+
+
+        // =================================================
+        // SUCCESS
+        // =================================================
+        res.status(200).json({
+            success: true,
+            count: students.length,
+            data: students
+        });
+
+    } catch (error) {
+
+        res.status(500).json({
+            success: false,
+            message: "Server error",
+            error: error.message
+        });
     }
-
-    // 2. validate it's one of the allowed values
-    if (!allowedPosts.includes(volunteerPost)) {
-      return res.status(400).json({
-        success: false,
-        message: `Invalid volunteerPost. Allowed values: ${allowedPosts.join(", ")}`
-      });
-    }
-
-    // 3. EXACT FILTER (no regex, no fallback)
-    const students = await Student.find({ volunteerPost: volunteerPost });
-
-    // 4. if none found
-    if (students.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: `No users found with volunteerPost: ${volunteerPost}`,
-      });
-    }
-
-    // 5. success
-    res.status(200).json({
-      success: true,
-      count: students.length,
-      data: students,
-    });
-
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Server error",
-      error: error.message,
-    });
-  }
 };
 
+
+// =====================================================
+// GET MEMBERS UNDER COORDINATOR / CAPTAIN / REFERRER
+// =====================================================
 exports.getMembersUnderCoordinator = async (req, res) => {
-  try {
-    const { couponCode } = req.query;
 
-    // 1. Validate query
-    if (!couponCode) {
-      return res.status(400).json({
-        success: false,
-        message: "couponCode query parameter is required",
-      });
+    try {
+
+        const { couponCode } = req.query;
+
+
+        // =================================================
+        // VALIDATE QUERY
+        // =================================================
+        if (!couponCode) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    "couponCode query parameter is required"
+            });
+        }
+
+
+        // =================================================
+        // FIND OWNER OF COUPON
+        // =================================================
+        const referrer = await Student.findOne({
+            couponCode: couponCode.trim()
+        });
+
+
+        if (!referrer) {
+            return res.status(404).json({
+                success: false,
+                message:
+                    `No coordinator, captain or NFSAN coordinator found with couponCode: ${couponCode}`
+            });
+        }
+
+
+        // =================================================
+        // FIND MEMBERS WHO USED THIS COUPON
+        // =================================================
+        const members = await Student.find({
+            usedCouponCode: couponCode.trim()
+        });
+
+
+        if (members.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message:
+                    `No members found who used couponCode: ${couponCode}`
+            });
+        }
+
+
+        // =================================================
+        // SUCCESS
+        // =================================================
+        res.status(200).json({
+            success: true,
+
+            referrer: {
+                id: referrer._id,
+                name: referrer.fullName,
+                volunteerPost: referrer.volunteerPost,
+                couponCode: referrer.couponCode
+            },
+
+            count: members.length,
+
+            members
+        });
+
+    } catch (error) {
+
+        res.status(500).json({
+            success: false,
+            message: "Server error",
+            error: error.message
+        });
     }
-
-    // 2. Find coordinator with this coupon
-    const captain = await Student.findOne({ couponCode });
-
-    if (!captain) {
-      return res.status(404).json({
-        success: false,
-        message: `No captain found with couponCode: ${couponCode}`,
-      });
-    }
-
-    // 3. Find members who used this coupon
-    const members = await Student.find({ usedCouponCode: couponCode });
-
-    if (members.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: `No members found who used couponCode: ${couponCode}`,
-      });
-    }
-
-    // 4. Success
-    res.status(200).json({
-      success: true,
-      captain: {
-        id: captain._id,
-        name: captain.fullName,
-        couponCode: captain.couponCode,
-      },
-      count: members.length,
-        members,
-    });
-
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Server error",
-      error: error.message,
-    });
-  }
 };
+
