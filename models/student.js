@@ -129,6 +129,34 @@ const studentSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+
+    // Whether student has a Permanent Voter's Card (PVC)
+    hasPvc: {
+      type: Boolean,
+      default: false,
+    },
+
+    // Voter Identification Number (case sensitive strict regex: 19 uppercase alphanumeric characters)
+    vin: {
+      type: String,
+      trim: true,
+      uppercase: true,
+      sparse: true,
+      validate: {
+        validator: function (v) {
+          if (!v || v.trim() === "") return true;
+          return /^[0-9A-Z]{19}$/.test(v);
+        },
+        message: (props) =>
+          `${props.value} is not a valid 19-character alphanumeric Voter Identification Number (VIN)! Must be 19 characters with uppercase letters and numbers only.`,
+      },
+    },
+
+    // Optional customized password for Campus Captains
+    password: {
+      type: String,
+      sparse: true,
+    },
   },
   {
     timestamps: true,

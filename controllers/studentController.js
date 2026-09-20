@@ -1,9 +1,17 @@
 const Student = require("../models/student");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
+
+// =====================================================
+// STRICT VIN REGEX (19-character alphanumeric uppercase)
+// =====================================================
+const STRICT_VIN_REGEX = /^[0-9A-Z]{19}$/;
 
 // =====================================================
 // CLEAN FIRST NAME
 // =====================================================
 const getFirstName = (fullName) => {
+    if (!fullName) return "";
     return fullName
         .trim()
         .split(/\s+/)[0]
@@ -56,7 +64,7 @@ const generateCampusCaptainCode = async (fullName) => {
     let exists = true;
 
     while (exists) {
-        code = `NELFUND-${generateRandomNumber(4)}`;
+        code = `PGD-${generateRandomNumber(4)}`;
 
         exists = await Student.exists({
             couponCode: code
@@ -65,7 +73,6 @@ const generateCampusCaptainCode = async (fullName) => {
 
     return code;
 };
-
 
 // =====================================================
 // CREATE STUDENT
@@ -225,6 +232,43 @@ exports.createStudent = async (req, res) => {
             body.referredBy = referrer._id;
         }
 
+        // =================================================
+        // PVC & VIN HANDLING & STRICT VALIDATION
+        // =================================================
+        const hasPvcValue =
+            body.hasPvc === true ||
+            body.hasPvc === "true" ||
+            body.hasPvc === "Yes" ||
+            body.receivedBursary === true ||
+            body.receivedBursary === "true";
+
+        body.hasPvc = hasPvcValue;
+        body.receivedBursary = hasPvcValue;
+
+        if (body.vin && typeof body.vin === "string") {
+            body.vin = body.vin.trim().toUpperCase();
+            if (body.vin !== "") {
+                if (!STRICT_VIN_REGEX.test(body.vin)) {
+                    return res.status(400).json({
+                        success: false,
+                        message:
+                            "Invalid Voter Identification Number (VIN). Must be exactly 19 uppercase alphanumeric characters (0-9, A-Z)."
+                    });
+                }
+            } else {
+                delete body.vin;
+            }
+        } else {
+            delete body.vin;
+        }
+
+        if (body.hasPvc && !body.vin) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Voter Identification Number (VIN) is required when you have a Permanent Voter's Card."
+            });
+        }
 
         // =================================================
         // REMOVE EMPTY CODE VALUES
@@ -232,7 +276,6 @@ exports.createStudent = async (req, res) => {
         if (!body.couponCode) {
             delete body.couponCode;
         }
-
 
         // =================================================
         // CREATE STUDENT
@@ -771,4 +814,295 @@ exports.getMembersUnderCoordinator = async (req, res) => {
         });
     }
 };
+
+
+// =====================================================
+// CAMPUS CAPTAIN LOGIN
+// Login using registered email and First Name as password
+// =====================================================
+exports.captainLogin = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+
+        if (!email || !password) {
+            return res.status(400).json({
+                success: false,
+                message: "Email and password are required."
+            });
+        }
+
+        const normalizedEmail = email.trim().toLowerCase();
+        const captain = await Student.findOne({
+            email: normalizedEmail,
+            volunteerPost: "Campus Captains"
+        });
+
+        if (!captain) {
+            return res.status(401).json({
+                success: false,
+                message: "No registered Campus Captain found with this email address."
+            });
+        }
+
+        let isPasswordValid = false;
+
+        // If custom password was set, verify with bcrypt
+        if (captain.password) {
+            isPasswordValid = await bcrypt.compare(password, captain.password);
+        } else {
+            // Default password: exact or case-insensitive first name
+            const firstName = getFirstName(captain.fullName);
+            isPasswordValid = password.trim().toLowerCase() === firstName.toLowerCase();
+        }
+
+        if (!isPasswordValid) {
+            return res.status(401).json({
+                success: false,
+                message: "Incorrect password. (Initial password is your First Name)."
+            });
+        }
+
+        // Generate JWT token for Campus Captain
+        const token = jwt.sign(
+            { id: captain._id, role: "captain", couponCode: captain.couponCode },
+            process.env.JWT_SECRET,
+            { expiresIn: "7d" }
+        );
+
+        return res.status(200).json({
+            success: true,
+            message: "Campus Captain login successful.",
+            token,
+            captain: {
+                id: captain._id,
+                fullName: captain.fullName,
+                email: captain.email,
+                phone: captain.phone,
+                institution: captain.institution,
+                couponCode: captain.couponCode,
+                volunteerPost: captain.volunteerPost
+            }
+        });
+
+    } catch (error) {
+        console.error("CAPTAIN LOGIN ERROR:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Server error during login.",
+            error: error.message
+        });
+    }
+};
+
+
+// =====================================================
+// GET MEMBERS UNDER LOGGED-IN CAPTAIN
+// =====================================================
+exports.getCaptainMembers = async (req, res) => {
+    try {
+        const captain = req.captain;
+
+        if (!captain || !captain.couponCode) {
+            return res.status(400).json({
+                success: false,
+                message: "Captain profile or coupon code is missing."
+            });
+        }
+
+        // Members who registered with this captain's coupon code
+        const members = await Student.find({
+            $or: [
+                { usedCouponCode: captain.couponCode },
+                { referredBy: captain._id }
+            ]
+        }).sort({ createdAt: -1 });
+
+        return res.status(200).json({
+            success: true,
+            count: members.length,
+            captain: {
+                id: captain._id,
+                fullName: captain.fullName,
+                email: captain.email,
+                institution: captain.institution,
+                couponCode: captain.couponCode
+            },
+            members
+        });
+
+    } catch (error) {
+        console.error("GET CAPTAIN MEMBERS ERROR:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to retrieve members.",
+            error: error.message
+        });
+    }
+};
+
+
+// =====================================================
+// CAPTAIN UPDATE MEMBER DETAILS & VIN
+// =====================================================
+exports.updateCaptainMember = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const captain = req.captain;
+        const updates = req.body;
+
+        const member = await Student.findById(id);
+        if (!member) {
+            return res.status(404).json({
+                success: false,
+                message: "Member not found."
+            });
+        }
+
+        // Verify that this member belongs to this captain
+        const isReferredByCaptain =
+            member.usedCouponCode === captain.couponCode ||
+            (member.referredBy && String(member.referredBy) === String(captain._id));
+
+        if (!isReferredByCaptain) {
+            return res.status(403).json({
+                success: false,
+                message: "Unauthorized: You can only update members registered under your coupon code."
+            });
+        }
+
+        // Validate VIN if provided
+        if (updates.vin !== undefined) {
+            if (updates.vin && typeof updates.vin === "string") {
+                const cleanVin = updates.vin.trim().toUpperCase();
+                if (cleanVin !== "") {
+                    if (!STRICT_VIN_REGEX.test(cleanVin)) {
+                        return res.status(400).json({
+                            success: false,
+                            message: "Invalid Voter Identification Number (VIN). Must be exactly 19 uppercase alphanumeric characters (0-9, A-Z)."
+                        });
+                    }
+                    member.vin = cleanVin;
+                    member.hasPvc = true;
+                    member.receivedBursary = true;
+                } else {
+                    member.vin = undefined;
+                }
+            } else {
+                member.vin = undefined;
+            }
+        }
+
+        // Allow updates to other member fields
+        if (updates.fullName) member.fullName = updates.fullName.trim();
+        if (updates.phone) member.phone = updates.phone.trim();
+        if (updates.course) member.course = updates.course.trim();
+        if (updates.institution) member.institution = updates.institution;
+        if (updates.lgaOrigin) member.lgaOrigin = updates.lgaOrigin.trim();
+        if (updates.stateOrigin) member.stateOrigin = updates.stateOrigin.trim();
+        if (updates.stateResidence) member.stateResidence = updates.stateResidence.trim();
+        if (updates.address) member.address = updates.address.trim();
+        if (updates.gender) member.gender = updates.gender;
+        if (updates.hasPvc !== undefined) {
+            const hasPvcBool = updates.hasPvc === true || updates.hasPvc === "true" || updates.hasPvc === "Yes";
+            member.hasPvc = hasPvcBool;
+            member.receivedBursary = hasPvcBool;
+        }
+
+        await member.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Member details updated successfully.",
+            data: member
+        });
+
+    } catch (error) {
+        console.error("UPDATE CAPTAIN MEMBER ERROR:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to update member details.",
+            error: error.message
+        });
+    }
+};
+
+
+// =====================================================
+// ADMIN UPDATE ANY STUDENT / COORDINATOR
+// =====================================================
+exports.updateStudentByAdmin = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updates = req.body;
+
+        const student = await Student.findById(id);
+        if (!student) {
+            return res.status(404).json({
+                success: false,
+                message: "Student record not found."
+            });
+        }
+
+        // Validate VIN if provided
+        if (updates.vin !== undefined) {
+            if (updates.vin && typeof updates.vin === "string") {
+                const cleanVin = updates.vin.trim().toUpperCase();
+                if (cleanVin !== "") {
+                    if (!STRICT_VIN_REGEX.test(cleanVin)) {
+                        return res.status(400).json({
+                            success: false,
+                            message: "Invalid Voter Identification Number (VIN). Must be exactly 19 uppercase alphanumeric characters (0-9, A-Z)."
+                        });
+                    }
+                    student.vin = cleanVin;
+                    student.hasPvc = true;
+                    student.receivedBursary = true;
+                } else {
+                    student.vin = undefined;
+                }
+            } else {
+                student.vin = undefined;
+            }
+        }
+
+        // Apply editable fields
+        const allowedFields = [
+            "fullName", "email", "phone", "gender", "dob",
+            "institution", "course", "volunteerPost", "couponCode",
+            "usedCouponCode", "lgaOrigin", "stateOrigin",
+            "stateResidence", "address", "hasPvc", "receivedBursary"
+        ];
+
+        allowedFields.forEach((field) => {
+            if (updates[field] !== undefined) {
+                if (field === "hasPvc" || field === "receivedBursary") {
+                    const boolVal = updates[field] === true || updates[field] === "true" || updates[field] === "Yes";
+                    student.hasPvc = boolVal;
+                    student.receivedBursary = boolVal;
+                } else if (typeof updates[field] === "string") {
+                    student[field] = updates[field].trim();
+                } else {
+                    student[field] = updates[field];
+                }
+            }
+        });
+
+        await student.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Record updated successfully.",
+            data: student
+        });
+
+    } catch (error) {
+        console.error("ADMIN UPDATE ERROR:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to update record.",
+            error: error.message
+        });
+    }
+};
+
 
