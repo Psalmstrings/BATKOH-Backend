@@ -136,7 +136,9 @@ const studentSchema = new mongoose.Schema(
       default: false,
     },
 
-    // Voter Identification Number (case sensitive strict regex: 19 uppercase alphanumeric characters)
+    // Voter Identification Number — strict Nigerian INEC format (18 chars):
+    // [2 digits][1 uppercase letter][1 digit][B][2 digits][2 uppercase letters][9 digits]
+    // Example: 90F5B12FC515580873
     vin: {
       type: String,
       trim: true,
@@ -145,12 +147,14 @@ const studentSchema = new mongoose.Schema(
       validate: {
         validator: function (v) {
           if (!v || v.trim() === "") return true;
-          return /^[0-9A-Z]{19}$/.test(v);
+          return /^[0-9]{2}[A-Z][0-9]B[0-9]{2}[A-Z]{2}[0-9]{9}$/.test(v);
         },
         message: (props) =>
-          `${props.value} is not a valid 19-character alphanumeric Voter Identification Number (VIN)! Must be 19 characters with uppercase letters and numbers only.`,
+          `"${props.value}" is not a valid Voter Identification Number (VIN). ` +
+          `Expected format: 2 digits + 1 uppercase letter + 1 digit + "B" + 2 digits + 2 uppercase letters + 9 digits (e.g. 90F5B12FC515580873).`,
       },
     },
+
 
     // Optional customized password for Campus Captains
     password: {

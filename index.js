@@ -8,7 +8,19 @@ const studentRoutes = require("./routes/studentRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 
 dotenv.config();
+
+// ─── STARTUP GUARD — fail fast if critical env vars are missing ───────────────
+if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 20) {
+  console.error("FATAL: JWT_SECRET is missing or too short in environment variables. Server will not start.");
+  process.exit(1);
+}
+if (!process.env.MONGO_URI) {
+  console.error("FATAL: MONGO_URI is missing in environment variables. Server will not start.");
+  process.exit(1);
+}
+
 connectDB();
+
 
 const app = express();
 

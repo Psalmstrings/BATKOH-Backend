@@ -5,7 +5,8 @@ const bcrypt = require("bcryptjs");
 // =====================================================
 // STRICT VIN REGEX (19-character alphanumeric uppercase)
 // =====================================================
-const STRICT_VIN_REGEX = /^[0-9A-Z]{19}$/;
+const STRICT_VIN_REGEX = /^[0-9]{2}[A-Z][0-9]B[0-9]{2}[A-Z]{2}[0-9]{9}$/;
+
 
 // =====================================================
 // CLEAN FIRST NAME
