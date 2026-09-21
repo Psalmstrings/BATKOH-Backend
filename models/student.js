@@ -52,7 +52,8 @@ const studentSchema = new mongoose.Schema(
 
     stateResidence: {
       type: String,
-      required: true,
+      required: false,
+      default: "",
     },
 
    institution: {
@@ -144,6 +145,7 @@ const studentSchema = new mongoose.Schema(
       uppercase: true,
       unique: true,
       sparse: true,
+      required: true,
       validate: {
         validator: function (v) {
           if (!v || v.trim() === "") return true;

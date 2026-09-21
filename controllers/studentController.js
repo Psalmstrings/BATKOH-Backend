@@ -171,7 +171,9 @@ exports.createStudent = async (req, res) => {
                 return res.status(400).json({
                     success: false,
                     message:
-                        "Referral coupon code is required for Student and Staff registration."
+                        volunteerPost === "Staff"
+                            ? "Staff coupon code is required for Staff registration."
+                            : "Referral coupon code is required for Student and Staff registration."
                 });
             }
 
@@ -182,64 +184,67 @@ exports.createStudent = async (req, res) => {
             if (!referrer) referrer = await Student.findOne({ couponCode: code, volunteerPost: "Campus Captains" });
             if (!referrer) referrer = await Student.findOne({ couponCode: code, volunteerPost: "Staff Captains" });
             if (!referrer) referrer = await Student.findOne({ couponCode: code, volunteerPost: "NFSAN Coordinator" });
-
             if (!referrer) {
-                return res.status(400).json({
-                    success: false,
-                    message:
-                        "Invalid code. Please provide a valid Campus Coordinator, Campus Captain, or Staff Captain code."
+                referrer = await Student.findOne({
+                    couponCode: code,
+                    volunteerPost: { $nin: ["Student", "Staff", "Members", "NFSAN Member"] }
                 });
             }
 
-            body.usedCouponCode = code;
-            body.referredBy = referrer._id;
+            if (!referrer) {
+                // When user picked "Staff", allow Staff code (e.g. STAFF-1234 or any code starting with STAFF)
+                if (volunteerPost === "Staff" && (code.startsWith("STAFF") || /^STAFF/i.test(code))) {
+                    body.usedCouponCode = code;
+                    body.referredBy = null;
+                } else {
+                    return res.status(400).json({
+                        success: false,
+                        message:
+                            volunteerPost === "Staff"
+                                ? "Invalid code. Please provide a valid Staff Captain code (e.g. STAFF-1234)."
+                                : "Invalid code. Please provide a valid Campus Coordinator, Campus Captain, or Staff Captain code."
+                    });
+                }
+            } else {
+                body.usedCouponCode = code;
+                body.referredBy = referrer._id;
+            }
         }
 
         // =================================================
         // PVC & VIN HANDLING
+        // VIN is REQUIRED for all registrations.
         // =================================================
-        const hasPvcValue =
-            body.hasPvc === true ||
-            body.hasPvc === "true" ||
-            body.hasPvc === "Yes" ||
-            body.receivedBursary === true ||
-            body.receivedBursary === "true";
-
-        body.hasPvc = hasPvcValue;
-        body.receivedBursary = hasPvcValue;
-
-        if (body.vin && typeof body.vin === "string") {
-            body.vin = body.vin.trim().toUpperCase();
-
-            if (body.vin !== "") {
-                if (!/^[A-Z0-9]{17,20}$/.test(body.vin)) {
-                    return res.status(400).json({
-                        success: false,
-                        message:
-                            "Invalid Voter Identification Number (VIN). VIN must contain only letters and numbers and be between 17 and 20 characters."
-                    });
-                }
-
-                // VIN uniqueness check at application level
-                if (await isVinTaken(body.vin)) {
-                    return res.status(409).json({
-                        success: false,
-                        message: "This VIN is already registered to another member."
-                    });
-                }
-            } else {
-                delete body.vin;
-            }
-        } else {
-            delete body.vin;
-        }
-
-        if (body.hasPvc && !body.vin) {
+        if (!body.vin || typeof body.vin !== "string" || body.vin.trim() === "") {
             return res.status(400).json({
                 success: false,
-                message:
-                    "Voter Identification Number (VIN) is required when you have a Permanent Voter's Card."
+                message: "Voter Identification Number (VIN) is required. Please enter your 17–20 character VIN."
             });
+        }
+
+        body.vin = body.vin.trim().toUpperCase();
+
+        if (!/^[A-Z0-9]{17,20}$/.test(body.vin)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid Voter Identification Number (VIN). VIN must contain only letters and numbers and be between 17 and 20 characters."
+            });
+        }
+
+        // VIN uniqueness check at application level
+        if (await isVinTaken(body.vin)) {
+            return res.status(409).json({
+                success: false,
+                message: "This VIN is already registered to another member. Please check and re-enter your VIN."
+            });
+        }
+
+        body.hasPvc = true;
+        body.receivedBursary = true;
+
+        // Default stateResidence to stateOfRegistration if not provided
+        if (!body.stateResidence && body.stateOfRegistration) {
+            body.stateResidence = body.stateOfRegistration;
         }
 
         // =================================================
@@ -265,6 +270,15 @@ exports.createStudent = async (req, res) => {
 
         console.error("CREATE STUDENT ERROR:", error);
 
+        if (error.name === "ValidationError") {
+            const msg = Object.values(error.errors).map(e => e.message).join(", ");
+            return res.status(400).json({
+                success: false,
+                message: msg || "Validation error.",
+                error: error.message
+            });
+        }
+
         if (error.code === 11000) {
             const duplicateField = Object.keys(error.keyPattern || {})[0];
 
@@ -286,7 +300,7 @@ exports.createStudent = async (req, res) => {
 
         return res.status(500).json({
             success: false,
-            message: "Server error.",
+            message: error.message || "Server error.",
             error: error.message
         });
     }
@@ -764,9 +778,13 @@ exports.updateCaptainMember = async (req, res) => {
                     member.receivedBursary = true;
                 } else {
                     member.vin = undefined;
+                    member.hasPvc = false;
+                    member.receivedBursary = false;
                 }
             } else {
                 member.vin = undefined;
+                member.hasPvc = false;
+                member.receivedBursary = false;
             }
         }
 
@@ -777,15 +795,8 @@ exports.updateCaptainMember = async (req, res) => {
         if (updates.institution)           member.institution           = updates.institution;
         if (updates.lgaOfRegistration)     member.lgaOfRegistration     = updates.lgaOfRegistration.trim();
         if (updates.stateOfRegistration)   member.stateOfRegistration   = updates.stateOfRegistration.trim();
-        if (updates.stateResidence)        member.stateResidence        = updates.stateResidence.trim();
         if (updates.address)               member.address               = updates.address.trim();
         if (updates.gender)                member.gender                = updates.gender;
-
-        if (updates.hasPvc !== undefined) {
-            const hasPvcBool = updates.hasPvc === true || updates.hasPvc === "true" || updates.hasPvc === "Yes";
-            member.hasPvc = hasPvcBool;
-            member.receivedBursary = hasPvcBool;
-        }
 
         await member.save();
 
@@ -797,6 +808,15 @@ exports.updateCaptainMember = async (req, res) => {
 
     } catch (error) {
         console.error("UPDATE CAPTAIN MEMBER ERROR:", error);
+
+        if (error.name === "ValidationError") {
+            const msg = Object.values(error.errors).map(e => e.message).join(", ");
+            return res.status(400).json({
+                success: false,
+                message: msg || "Validation error.",
+                error: error.message
+            });
+        }
 
         if (error.code === 11000) {
             const duplicateField = Object.keys(error.keyPattern || {})[0];
@@ -815,7 +835,7 @@ exports.updateCaptainMember = async (req, res) => {
 
         return res.status(500).json({
             success: false,
-            message: "Failed to update member details.",
+            message: error.message || "Failed to update member details.",
             error: error.message
         });
     }
@@ -859,11 +879,16 @@ exports.updateStudentByAdmin = async (req, res) => {
 
                     student.vin = cleanVin;
                     student.hasPvc = true;
+                    student.receivedBursary = true;
                 } else {
                     student.vin = undefined;
+                    student.hasPvc = false;
+                    student.receivedBursary = false;
                 }
             } else {
                 student.vin = undefined;
+                student.hasPvc = false;
+                student.receivedBursary = false;
             }
         }
 
@@ -872,16 +897,12 @@ exports.updateStudentByAdmin = async (req, res) => {
             "fullName", "email", "phone", "gender", "dob",
             "institution", "course", "volunteerPost", "couponCode",
             "usedCouponCode", "lgaOfRegistration", "stateOfRegistration",
-            "stateResidence", "address", "hasPvc", "receivedBursary"
+            "address"
         ];
 
         allowedFields.forEach((field) => {
             if (updates[field] !== undefined) {
-                if (field === "hasPvc" || field === "receivedBursary") {
-                    const boolVal = updates[field] === true || updates[field] === "true" || updates[field] === "Yes";
-                    student.hasPvc = boolVal;
-                    student.receivedBursary = boolVal;
-                } else if (typeof updates[field] === "string") {
+                if (typeof updates[field] === "string") {
                     student[field] = updates[field].trim();
                 } else {
                     student[field] = updates[field];
@@ -900,6 +921,15 @@ exports.updateStudentByAdmin = async (req, res) => {
     } catch (error) {
         console.error("ADMIN UPDATE ERROR:", error);
 
+        if (error.name === "ValidationError") {
+            const msg = Object.values(error.errors).map(e => e.message).join(", ");
+            return res.status(400).json({
+                success: false,
+                message: msg || "Validation error.",
+                error: error.message
+            });
+        }
+
         if (error.code === 11000) {
             const duplicateField = Object.keys(error.keyPattern || {})[0];
             if (duplicateField === "vin") {
@@ -917,7 +947,7 @@ exports.updateStudentByAdmin = async (req, res) => {
 
         return res.status(500).json({
             success: false,
-            message: "Failed to update record.",
+            message: error.message || "Failed to update record.",
             error: error.message
         });
     }
