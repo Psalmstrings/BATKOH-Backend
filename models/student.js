@@ -79,16 +79,23 @@ const studentSchema = new mongoose.Schema(
       type: String,
       required: true,
       enum: [
+        // Admin-registered roles (do not appear in public form)
         "Director",
         "State Coordinator",
         "Deputy Coordinator",
         "State Working Committee",
         "Campus Coordinators",
         "Campus Captains",
+        "Staff Captains",
+        // Legacy values kept for existing records — migrated to Student
         "Members",
         "NFSAN Member",
+        // Public registration roles (appear in form)
+        "Student",
+        "Staff",
       ],
     },
+
 
     /**
      * REFERRAL / COUPON SYSTEM
@@ -136,9 +143,9 @@ const studentSchema = new mongoose.Schema(
       default: false,
     },
 
-    // Voter Identification Number — strict Nigerian INEC format (18 chars):
-    // [2 digits][1 uppercase letter][1 digit][B][2 digits][2 uppercase letters][9 digits]
-    // Example: 90F5B12FC515580873
+    // Voter Identification Number — Nigerian INEC (two accepted formats):
+    // Format A: INC + 17 digits  → e.g. INC26000000044392309  (20 chars)
+    // Format B: 2digits+letter+digit+B+3digits+2letters+9digits → e.g. 90F5B126FC515580873 (19 chars)
     vin: {
       type: String,
       trim: true,
@@ -147,13 +154,13 @@ const studentSchema = new mongoose.Schema(
       validate: {
         validator: function (v) {
           if (!v || v.trim() === "") return true;
-          return /^[0-9]{2}[A-Z][0-9]B[0-9]{2}[A-Z]{2}[0-9]{9}$/.test(v);
+          return /^(INC[0-9]{17}|[0-9]{2}[A-Z][0-9]B[0-9]{3}[A-Z]{2}[0-9]{9})$/.test(v);
         },
-        message: (props) =>
-          `"${props.value}" is not a valid Voter Identification Number (VIN). ` +
-          `Expected format: 2 digits + 1 uppercase letter + 1 digit + "B" + 2 digits + 2 uppercase letters + 9 digits (e.g. 90F5B12FC515580873).`,
+        message: () =>
+          `Please enter a valid VIN. Accepted formats: "INC26000000044392309" or "90F5B126FC515580873".`,
       },
     },
+
 
 
     // Optional customized password for Campus Captains

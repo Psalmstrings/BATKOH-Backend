@@ -50,16 +50,16 @@ router.get("/search", verifyAdmin, searchByVolunteerPost);
 // 3. MEMBERS ROUTE (admin-only)
 router.get("/members", verifyAdmin, getMembersUnderCoordinator);
 
-// 4. DYNAMIC PARAMETER ROUTES (admin-only)
-router.get("/:id", verifyAdmin, getSingleStudent);
-router.put("/:id", verifyAdmin, updateStudentByAdmin);
-router.delete("/:id", verifyAdmin, deleteStudent);
-
-// 5. FILTER ROUTES (admin-only)
+// 4. FILTER ROUTES (admin-only)
 router.get("/state/:stateOrigin", verifyAdmin, getStudentByState);
 router.get("/lga/:lgaOrigin", verifyAdmin, getStudentByLga);
 router.get("/school/:institution", verifyAdmin, getStudentBySchool);
 router.get("/residence/:stateResidence", verifyAdmin, getStudentByStateResidence);
+
+// 5. DYNAMIC PARAMETER ROUTES (admin-only)
+router.get("/:id", verifyAdmin, getSingleStudent);
+router.put("/:id", verifyAdmin, updateStudentByAdmin);
+router.delete("/:id", verifyAdmin, deleteStudent);
 
 // 6. PUBLIC ROUTES
 router.post("/", registrationLimiter, checkExistingStudent, createStudent); // rate-limited

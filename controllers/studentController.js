@@ -3,9 +3,12 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 
 // =====================================================
-// STRICT VIN REGEX (19-character alphanumeric uppercase)
+// STRICT VIN REGEX — Two accepted INEC formats:
+// Format A: INC + 17 digits  (e.g. INC26000000044392309)
+// Format B: 2digits+letter+digit+B+3digits+2letters+9digits (e.g. 90F5B126FC515580873)
 // =====================================================
-const STRICT_VIN_REGEX = /^[0-9]{2}[A-Z][0-9]B[0-9]{2}[A-Z]{2}[0-9]{9}$/;
+const STRICT_VIN_REGEX = /^(INC[0-9]{17}|[0-9]{2}[A-Z][0-9]B[0-9]{3}[A-Z]{2}[0-9]{9})$/;
+
 
 
 // =====================================================
@@ -55,17 +58,37 @@ const generateCampusCoordinatorCode = async (fullName) => {
 
 // =====================================================
 // CAMPUS CAPTAIN CODE
-// FORMAT: NELFUND-1234
-// Example: NELFUND-4821
+// FORMAT: FirstName123 (e.g. JOHN482)
+// Firstname + 3 random codes
 // =====================================================
 const generateCampusCaptainCode = async (fullName) => {
-    const firstName = getFirstName(fullName);
+    const rawFirstName = getFirstName(fullName).toUpperCase();
+    const firstName = rawFirstName || "CAP";
 
     let code;
     let exists = true;
 
     while (exists) {
-        code = `PGD-${generateRandomNumber(4)}`;
+        code = `${firstName}${generateRandomNumber(3)}`;
+
+        exists = await Student.exists({
+            couponCode: code
+        });
+    }
+
+    return code;
+};
+
+// =====================================================
+// STAFF CAPTAIN CODE
+// FORMAT: STAFF-1234 (e.g. STAFF-4821)
+// =====================================================
+const generateStaffCaptainCode = async () => {
+    let code;
+    let exists = true;
+
+    while (exists) {
+        code = `STAFF-${generateRandomNumber(4)}`;
 
         exists = await Student.exists({
             couponCode: code
@@ -116,62 +139,83 @@ exports.createStudent = async (req, res) => {
         // =================================================
         // CAMPUS CAPTAIN
         //
-        // Must provide Campus Coordinator code
+        // Admin can register without coupon code.
+        // If coordinator code is provided, links captain to coordinator.
+        // Generates Captain code: FirstName + 3 random digits
         // =================================================
         else if (volunteerPost === "Campus Captains") {
 
-            if (!usedCouponCode || usedCouponCode.trim() === "") {
-                return res.status(400).json({
-                    success: false,
-                    message:
-                        "Campus Coordinator coupon code is required for Campus Captains."
+            if (usedCouponCode && usedCouponCode.trim() !== "") {
+                const coordinator = await Student.findOne({
+                    couponCode: usedCouponCode.trim().toUpperCase(),
+                    volunteerPost: "Campus Coordinators"
                 });
+
+                if (!coordinator) {
+                    return res.status(400).json({
+                        success: false,
+                        message:
+                            "Invalid Campus Coordinator coupon code."
+                    });
+                }
+
+                body.usedCouponCode = usedCouponCode.trim().toUpperCase();
+                body.referredBy = coordinator._id;
+            } else {
+                delete body.usedCouponCode;
             }
 
-            const coordinator = await Student.findOne({
-                couponCode: usedCouponCode.trim(),
-                volunteerPost: "Campus Coordinators"
-            });
-
-            if (!coordinator) {
-                return res.status(400).json({
-                    success: false,
-                    message:
-                        "Invalid Campus Coordinator coupon code."
-                });
-            }
-
-            // Generate Captain's own unique code
+            // Generate Captain's own unique code (FirstName + 3 random codes)
             body.couponCode =
                 await generateCampusCaptainCode(fullName);
-
-            // Store the code used
-            body.usedCouponCode = usedCouponCode.trim();
-
-            // Link captain to coordinator
-            body.referredBy = coordinator._id;
         }
 
 
         // =================================================
-        // MEMBER
+        // STAFF CAPTAIN
         //
-        // Member can use:
-        // 1. Campus Coordinator code
-        // 2. Campus Captain code
-        // 3. NFSAN Coordinator code
+        // Admin can register without coupon code.
+        // Generates Staff Captain code: STAFF-XXXX
         // =================================================
-        else if (volunteerPost === "Members") {
+        else if (volunteerPost === "Staff Captains") {
+
+            if (usedCouponCode && usedCouponCode.trim() !== "") {
+                body.usedCouponCode = usedCouponCode.trim().toUpperCase();
+            } else {
+                delete body.usedCouponCode;
+            }
+
+            // Generate Staff Captain's own unique code
+            body.couponCode =
+                await generateStaffCaptainCode();
+        }
+
+
+        // =================================================
+        // MEMBERS / STUDENTS / STAFF
+        //
+        // Can use:
+        // 1. Campus Coordinator code (e.g. DR-John4821)
+        // 2. Campus Captain code (e.g. JOHN482)
+        // 3. Staff Captain code (e.g. STAFF-1234)
+        // 4. NFSAN Coordinator code (legacy)
+        // =================================================
+        else if (
+            volunteerPost === "Members" ||
+            volunteerPost === "Student" ||
+            volunteerPost === "Staff" ||
+            volunteerPost === "NFSAN Member"
+        ) {
 
             if (!usedCouponCode || usedCouponCode.trim() === "") {
                 return res.status(400).json({
                     success: false,
                     message:
-                        "Campus Coordinator, Campus Captain or NFSAN Coordinator code is required for Members."
+                        "Referral coupon code is required for Student and Staff registration."
                 });
             }
 
-            const code = usedCouponCode.trim();
+            const code = usedCouponCode.trim().toUpperCase();
 
             let referrer = null;
 
@@ -186,8 +230,7 @@ exports.createStudent = async (req, res) => {
 
 
             // ---------------------------------------------
-            // 2. IF NOT CAMPUS COORDINATOR,
-            //    CHECK CAMPUS CAPTAIN
+            // 2. CHECK CAMPUS CAPTAIN
             // ---------------------------------------------
             if (!referrer) {
                 referrer = await Student.findOne({
@@ -198,8 +241,18 @@ exports.createStudent = async (req, res) => {
 
 
             // ---------------------------------------------
-            // 3. IF NOT CAMPUS CAPTAIN,
-            //    CHECK NFSAN COORDINATOR
+            // 3. CHECK STAFF CAPTAIN
+            // ---------------------------------------------
+            if (!referrer) {
+                referrer = await Student.findOne({
+                    couponCode: code,
+                    volunteerPost: "Staff Captains"
+                });
+            }
+
+
+            // ---------------------------------------------
+            // 4. CHECK NFSAN COORDINATOR (legacy)
             // ---------------------------------------------
             if (!referrer) {
                 referrer = await Student.findOne({
@@ -210,26 +263,21 @@ exports.createStudent = async (req, res) => {
 
 
             // ---------------------------------------------
-            // 4. INVALID CODE
+            // 5. INVALID CODE
             // ---------------------------------------------
             if (!referrer) {
                 return res.status(400).json({
                     success: false,
                     message:
-                        "Invalid code. Please provide a valid Campus Coordinator, Campus Captain or NFSAN Coordinator code."
+                        "Invalid code. Please provide a valid Campus Coordinator, Campus Captain, or Staff Captain code."
                 });
             }
 
 
             // ---------------------------------------------
-            // STORE THE CODE USED
+            // STORE THE CODE USED & LINK REFERRER
             // ---------------------------------------------
             body.usedCouponCode = code;
-
-
-            // ---------------------------------------------
-            // LINK MEMBER TO REFERRER
-            // ---------------------------------------------
             body.referredBy = referrer._id;
         }
 
@@ -481,10 +529,10 @@ exports.deleteStudent = async (req, res) => {
 
 
         // =================================================
-        // HANDLE CAMPUS CAPTAIN DELETION
+        // HANDLE CAPTAIN DELETION (Campus or Staff Captain)
         // =================================================
         if (
-            deletedStudent.volunteerPost === "Campus Captains" &&
+            ["Campus Captains", "Staff Captains"].includes(deletedStudent.volunteerPost) &&
             deletedStudent.couponCode
         ) {
 
@@ -503,7 +551,7 @@ exports.deleteStudent = async (req, res) => {
             return res.status(200).json({
                 success: true,
                 message:
-                    `Student deleted successfully. Members who used coupon code '${deletedStudent.couponCode}' have been unlinked.`,
+                    `Captain deleted successfully. Members who used coupon code '${deletedStudent.couponCode}' have been unlinked.`,
                 data: deletedStudent
             });
         }
@@ -664,7 +712,11 @@ exports.searchByVolunteerPost = async (req, res) => {
             "State Working Committee",
             "Campus Coordinators",
             "Campus Captains",
-            "Members"
+            "Staff Captains",
+            "Members",
+            "Student",
+            "Staff",
+            "NFSAN Member"
         ];
 
 
@@ -835,13 +887,13 @@ exports.captainLogin = async (req, res) => {
         const normalizedEmail = email.trim().toLowerCase();
         const captain = await Student.findOne({
             email: normalizedEmail,
-            volunteerPost: "Campus Captains"
+            volunteerPost: { $in: ["Campus Captains", "Staff Captains"] }
         });
 
         if (!captain) {
             return res.status(401).json({
                 success: false,
-                message: "No registered Campus Captain found with this email address."
+                message: "No registered Captain found with this email address."
             });
         }
 
@@ -863,7 +915,7 @@ exports.captainLogin = async (req, res) => {
             });
         }
 
-        // Generate JWT token for Campus Captain
+        // Generate JWT token for Captain
         const token = jwt.sign(
             { id: captain._id, role: "captain", couponCode: captain.couponCode },
             process.env.JWT_SECRET,
@@ -872,7 +924,7 @@ exports.captainLogin = async (req, res) => {
 
         return res.status(200).json({
             success: true,
-            message: "Campus Captain login successful.",
+            message: "Captain login successful.",
             token,
             captain: {
                 id: captain._id,

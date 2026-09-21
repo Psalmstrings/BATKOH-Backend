@@ -35,14 +35,14 @@ exports.verifyAdmin = async (req, res, next) => {
   }
 };
 
-// Verify Campus Captain JWT
+// Verify Captain JWT (Campus Captains & Staff Captains)
 exports.verifyCaptain = async (req, res, next) => {
   try {
     let token = req.headers.authorization;
     if (!token || !token.startsWith("Bearer ")) {
       return res.status(401).json({
         success: false,
-        message: "Access denied. Campus Captain token required.",
+        message: "Access denied. Captain token required.",
       });
     }
 
@@ -50,10 +50,10 @@ exports.verifyCaptain = async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     const captain = await Student.findById(decoded.id);
-    if (!captain || captain.volunteerPost !== "Campus Captains") {
+    if (!captain || !["Campus Captains", "Staff Captains"].includes(captain.volunteerPost)) {
       return res.status(403).json({
         success: false,
-        message: "Access denied. You must be an authorized Campus Captain.",
+        message: "Access denied. You must be an authorized Captain.",
       });
     }
 
@@ -62,7 +62,7 @@ exports.verifyCaptain = async (req, res, next) => {
   } catch (error) {
     return res.status(401).json({
       success: false,
-      message: "Campus Captain session expired or invalid. Please log in again.",
+      message: "Captain session expired or invalid. Please log in again.",
       error: error.message,
     });
   }
