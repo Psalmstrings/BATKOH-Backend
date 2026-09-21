@@ -7,7 +7,6 @@ const bcrypt = require("bcryptjs");
 // Format A: INC + 17 digits  (e.g. INC26000000044392309)
 // Format B: 2digits+letter+digit+B+3digits+2letters+9digits (e.g. 90F5B126FC515580873)
 // =====================================================
-const STRICT_VIN_REGEX = /^(INC[0-9]{17}|[0-9]{2}[A-Z][0-9]B[0-9]{3}[A-Z]{2}[0-9]{9})$/;
 
 
 
@@ -294,14 +293,15 @@ exports.createStudent = async (req, res) => {
         body.hasPvc = hasPvcValue;
         body.receivedBursary = hasPvcValue;
 
-        if (body.vin && typeof body.vin === "string") {
+            if (body.vin && typeof body.vin === "string") {
             body.vin = body.vin.trim().toUpperCase();
+
             if (body.vin !== "") {
-                if (!STRICT_VIN_REGEX.test(body.vin)) {
+                if (!/^[A-Z0-9]{17,20}$/.test(body.vin)) {
                     return res.status(400).json({
                         success: false,
                         message:
-                            "Invalid Voter Identification Number (VIN). Must be exactly 19 uppercase alphanumeric characters (0-9, A-Z)."
+                            "Invalid Voter Identification Number (VIN). VIN must contain only letters and numbers and be between 17 and 20 characters."
                     });
                 }
             } else {

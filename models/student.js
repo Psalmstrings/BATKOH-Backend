@@ -70,11 +70,6 @@ const studentSchema = new mongoose.Schema(
     ],
     },
 
-    course: {
-      type: String,
-      required: true,
-    },
-
     volunteerPost: {
       type: String,
       required: true,
@@ -153,11 +148,11 @@ const studentSchema = new mongoose.Schema(
       sparse: true,
       validate: {
         validator: function (v) {
-          if (!v || v.trim() === "") return true;
-          return /^(INC[0-9]{17}|[0-9]{2}[A-Z][0-9]B[0-9]{3}[A-Z]{2}[0-9]{9})$/.test(v);
+            if (!v || v.trim() === "") return true;
+            return /^[A-Z0-9]{17,20}$/.test(v.trim().toUpperCase());
         },
-        message: () =>
-          `Please enter a valid VIN. Accepted formats: "INC26000000044392309" or "90F5B126FC515580873".`,
+        message:
+            "VIN must contain only letters and numbers and be between 17 and 20 characters.",
       },
     },
 
