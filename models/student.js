@@ -33,12 +33,14 @@ const studentSchema = new mongoose.Schema(
       trim: true,
     },
 
-    lgaOrigin: {
+    // ── Renamed from lgaOrigin ──
+    lgaOfRegistration: {
       type: String,
       required: true,
     },
 
-    stateOrigin: {
+    // ── Renamed from stateOrigin ──
+    stateOfRegistration: {
       type: String,
       required: true,
     },
@@ -82,7 +84,7 @@ const studentSchema = new mongoose.Schema(
         "Campus Coordinators",
         "Campus Captains",
         "Staff Captains",
-        // Legacy values kept for existing records — migrated to Student
+        // Legacy values kept for existing records
         "Members",
         "NFSAN Member",
         // Public registration roles (appear in form)
@@ -97,9 +99,7 @@ const studentSchema = new mongoose.Schema(
      */
 
     // Unique referral code.
-    // Generated for:
-    // - Campus Coordinators
-    // - NFSAN Coordinators
+    // Generated for Campus Captains, Staff Captains, Campus Coordinators.
     couponCode: {
       type: String,
       unique: true,
@@ -110,9 +110,6 @@ const studentSchema = new mongoose.Schema(
     },
 
     // Code entered by a member during registration.
-    // Used by:
-    // - Members
-    // - NFSAN Members
     usedCouponCode: {
       type: String,
       trim: true,
@@ -120,7 +117,7 @@ const studentSchema = new mongoose.Schema(
       index: true,
     },
 
-    // The coordinator who referred this member.
+    // The coordinator/captain who referred this member.
     referredBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Student",
@@ -138,27 +135,26 @@ const studentSchema = new mongoose.Schema(
       default: false,
     },
 
-    // Voter Identification Number — Nigerian INEC (two accepted formats):
-    // Format A: INC + 17 digits  → e.g. INC26000000044392309  (20 chars)
-    // Format B: 2digits+letter+digit+B+3digits+2letters+9digits → e.g. 90F5B126FC515580873 (19 chars)
+    // Voter Identification Number — Nigerian INEC
+    // Must be 17–20 alphanumeric characters.
+    // unique + sparse so multiple empty/null values are allowed.
     vin: {
       type: String,
       trim: true,
       uppercase: true,
+      unique: true,
       sparse: true,
       validate: {
         validator: function (v) {
-            if (!v || v.trim() === "") return true;
-            return /^[A-Z0-9]{17,20}$/.test(v.trim().toUpperCase());
+          if (!v || v.trim() === "") return true;
+          return /^[A-Z0-9]{17,20}$/.test(v.trim().toUpperCase());
         },
         message:
-            "VIN must contain only letters and numbers and be between 17 and 20 characters.",
+          "VIN must contain only letters and numbers and be between 17 and 20 characters.",
       },
     },
 
-
-
-    // Optional customized password for Campus Captains
+    // Optional customized password for Campus/Staff Captains
     password: {
       type: String,
       sparse: true,
