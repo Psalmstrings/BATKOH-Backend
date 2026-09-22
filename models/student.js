@@ -37,6 +37,28 @@ const studentSchema = new mongoose.Schema(
     lgaOfRegistration: {
       type: String,
       required: true,
+      enum: [
+        "AGEGE",
+        "AJEROMI/IFELODUN",
+        "ALIMOSHO",
+        "AMUWO-ODOFIN",
+        "APAPA",
+        "BADAGRY",
+        "EPE",
+        "ETI-OSA",
+        "IBEJU/LEKKI",
+        "IFAKO-IJAYE",
+        "IKEJA",
+        "IKORODU",
+        "KOSOFE",
+        "LAGOS ISLAND",
+        "LAGOS MAINLAND",
+        "MUSHIN",
+        "0J0",
+        "OSHODI/ISOLO",
+        "SOMOLU",
+        "SURULERE"
+      ],
     },
 
     // ── Renamed from stateOrigin ──
