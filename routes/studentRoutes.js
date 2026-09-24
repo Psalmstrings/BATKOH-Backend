@@ -19,11 +19,11 @@ const {
 const checkExistingStudent = require("../middlewares/checkExistingStudent");
 const { verifyAdmin, verifyCaptain } = require("../middlewares/authMiddleware");
 
-// Registration rate limiter (20 regs / hour per IP)
+// Registration rate limiter (200 regs / hour per IP)
 const rateLimit = require("express-rate-limit");
 const registrationLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
-  max: 20,
+  max: 200,
   standardHeaders: true,
   legacyHeaders: false,
   message: {
