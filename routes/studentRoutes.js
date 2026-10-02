@@ -15,9 +15,11 @@ const {
   getCaptainMembers,
   updateCaptainMember,
   updateStudentByAdmin,
+  coordinatorLogin,
+  getCoordinatorSchoolData,
 } = require("../controllers/studentController");
 const checkExistingStudent = require("../middlewares/checkExistingStudent");
-const { verifyAdmin, verifyCaptain } = require("../middlewares/authMiddleware");
+const { verifyAdmin, verifyCaptain, verifyCoordinator } = require("../middlewares/authMiddleware");
 
 // Registration rate limiter (200 regs / hour per IP)
 const rateLimit = require("express-rate-limit");
@@ -42,6 +44,10 @@ const router = express.Router();
 router.post("/captain-login", captainLogin);
 router.get("/captain/members", verifyCaptain, getCaptainMembers);
 router.put("/captain/member/:id", verifyCaptain, updateCaptainMember);
+
+// 1b. COORDINATOR AUTH & PORTAL ROUTES (public login, protected read-only data)
+router.post("/coordinator-login", coordinatorLogin);
+router.get("/coordinator/school", verifyCoordinator, getCoordinatorSchoolData);
 
 // 2. SEARCH ROUTES (admin-only — contains sensitive PII)
 router.get("/search/name", verifyAdmin, searchByName);

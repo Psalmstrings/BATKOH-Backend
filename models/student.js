@@ -92,6 +92,7 @@ const studentSchema = new mongoose.Schema(
         "LASCOETH",
         "LASUSTECH",
         "LASUED",
+        "FCFMT",
     ],
     },
 
@@ -105,6 +106,7 @@ const studentSchema = new mongoose.Schema(
         "Deputy Coordinator",
         "State Working Committee",
         "Campus Coordinators",
+        "Staff Coordinator",
         "Campus Captains",
         "Staff Captains",
         // Legacy values kept for existing records

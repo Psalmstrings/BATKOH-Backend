@@ -92,6 +92,7 @@ app.use(generalLimiter);
 
 // Targeted limiters on sensitive paths (before route mounts)
 app.use("/api/students/captain-login", loginLimiter);
+app.use("/api/students/coordinator-login", loginLimiter);
 app.use("/api/admin/login", loginLimiter);
 app.use("/api/students", studentRoutes);
 app.use("/api/admin", adminRoutes);

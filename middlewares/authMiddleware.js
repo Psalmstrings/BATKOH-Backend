@@ -67,3 +67,36 @@ exports.verifyCaptain = async (req, res, next) => {
     });
   }
 };
+
+// Verify Coordinator JWT (Campus Coordinators & Staff Coordinators)
+exports.verifyCoordinator = async (req, res, next) => {
+  try {
+    let token = req.headers.authorization;
+    if (!token || !token.startsWith("Bearer ")) {
+      return res.status(401).json({
+        success: false,
+        message: "Access denied. Coordinator token required.",
+      });
+    }
+
+    token = token.split(" ")[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    const coordinator = await Student.findById(decoded.id);
+    if (!coordinator || !["Campus Coordinators", "Staff Coordinator"].includes(coordinator.volunteerPost)) {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied. You must be an authorized Coordinator.",
+      });
+    }
+
+    req.coordinator = coordinator;
+    next();
+  } catch (error) {
+    return res.status(401).json({
+      success: false,
+      message: "Coordinator session expired or invalid. Please log in again.",
+      error: error.message,
+    });
+  }
+};

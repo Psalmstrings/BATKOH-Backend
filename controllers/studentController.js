@@ -107,9 +107,52 @@ exports.createStudent = async (req, res) => {
 
 
         // =================================================
-        // CAMPUS COORDINATOR
+        // CAMPUS COORDINATOR & STAFF COORDINATOR
+        // Requirement: Only one Campus Coordinator and one Staff Coordinator per school
         // =================================================
         if (volunteerPost === "Campus Coordinators") {
+            if (!body.institution) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Institution is required for Campus Coordinator."
+                });
+            }
+
+            const existingCoord = await Student.findOne({
+                institution: body.institution,
+                volunteerPost: "Campus Coordinators"
+            });
+
+            if (existingCoord) {
+                return res.status(409).json({
+                    success: false,
+                    message: `A Campus Coordinator has already been registered for ${body.institution}. Only one Campus Coordinator per school is permitted.`
+                });
+            }
+
+            body.couponCode = await generateCampusCoordinatorCode(fullName);
+        }
+
+        else if (volunteerPost === "Staff Coordinator") {
+            if (!body.institution) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Institution is required for Staff Coordinator."
+                });
+            }
+
+            const existingStaffCoord = await Student.findOne({
+                institution: body.institution,
+                volunteerPost: "Staff Coordinator"
+            });
+
+            if (existingStaffCoord) {
+                return res.status(409).json({
+                    success: false,
+                    message: `A Staff Coordinator has already been registered for ${body.institution}. Only one Staff Coordinator per school is permitted.`
+                });
+            }
+
             body.couponCode = await generateCampusCoordinatorCode(fullName);
         }
 
@@ -180,7 +223,7 @@ exports.createStudent = async (req, res) => {
             const code = usedCouponCode.trim().toUpperCase();
             let referrer = null;
 
-            referrer = await Student.findOne({ couponCode: code, volunteerPost: "Campus Coordinators" });
+            referrer = await Student.findOne({ couponCode: code, volunteerPost: { $in: ["Campus Coordinators", "Staff Coordinator"] } });
             if (!referrer) referrer = await Student.findOne({ couponCode: code, volunteerPost: "Campus Captains" });
             if (!referrer) referrer = await Student.findOne({ couponCode: code, volunteerPost: "Staff Captains" });
             if (!referrer) referrer = await Student.findOne({ couponCode: code, volunteerPost: "NFSAN Coordinator" });
@@ -892,6 +935,24 @@ exports.updateStudentByAdmin = async (req, res) => {
             }
         }
 
+        // ── Coordinator single-per-school enforcement ──
+        const targetPost = updates.volunteerPost !== undefined ? updates.volunteerPost : student.volunteerPost;
+        const targetInstitution = updates.institution !== undefined ? updates.institution : student.institution;
+
+        if (targetPost === "Campus Coordinators" || targetPost === "Staff Coordinator") {
+            const duplicateCoord = await Student.findOne({
+                _id: { $ne: student._id },
+                institution: targetInstitution,
+                volunteerPost: targetPost
+            });
+            if (duplicateCoord) {
+                return res.status(409).json({
+                    success: false,
+                    message: `A ${targetPost === "Staff Coordinator" ? "Staff Coordinator" : "Campus Coordinator"} has already been registered for ${targetInstitution}. Only one is permitted per school.`
+                });
+            }
+        }
+
         // ── Editable fields (updated to use renamed fields) ──
         const allowedFields = [
             "fullName", "email", "phone", "gender", "dob",
@@ -948,6 +1009,150 @@ exports.updateStudentByAdmin = async (req, res) => {
         return res.status(500).json({
             success: false,
             message: error.message || "Failed to update record.",
+            error: error.message
+        });
+    }
+};
+
+
+// =====================================================
+// COORDINATOR LOGIN
+// Credentials: email + firstname (case-insensitive)
+// Campus Coordinators and Staff Coordinators use this route.
+// =====================================================
+exports.coordinatorLogin = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+
+        if (!email || !password) {
+            return res.status(400).json({
+                success: false,
+                message: "Email and password are required."
+            });
+        }
+
+        const normalizedEmail = email.trim().toLowerCase();
+        const coordinator = await Student.findOne({
+            email: normalizedEmail,
+            volunteerPost: { $in: ["Campus Coordinators", "Staff Coordinator"] }
+        });
+
+        if (!coordinator) {
+            return res.status(401).json({
+                success: false,
+                message: "No registered Coordinator found with this email address."
+            });
+        }
+
+        let isPasswordValid = false;
+
+        // If a custom password was set, verify with bcrypt
+        if (coordinator.password) {
+            isPasswordValid = await bcrypt.compare(password, coordinator.password);
+        } else {
+            // Default password: first name (case-insensitive)
+            const firstName = getFirstName(coordinator.fullName);
+            isPasswordValid = password.trim().toLowerCase() === firstName.toLowerCase();
+        }
+
+        if (!isPasswordValid) {
+            return res.status(401).json({
+                success: false,
+                message: "Incorrect password. Your initial password is your First Name."
+            });
+        }
+
+        const token = jwt.sign(
+            { id: coordinator._id, role: "coordinator", institution: coordinator.institution },
+            process.env.JWT_SECRET,
+            { expiresIn: "7d" }
+        );
+
+        return res.status(200).json({
+            success: true,
+            message: "Coordinator login successful.",
+            token,
+            coordinator: {
+                id: coordinator._id,
+                fullName: coordinator.fullName,
+                email: coordinator.email,
+                phone: coordinator.phone,
+                institution: coordinator.institution,
+                volunteerPost: coordinator.volunteerPost
+            }
+        });
+
+    } catch (error) {
+        console.error("COORDINATOR LOGIN ERROR:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Server error during login.",
+            error: error.message
+        });
+    }
+};
+
+
+// =====================================================
+// GET CAPTAINS AND MEMBERS IN COORDINATOR'S INSTITUTION (READ-ONLY)
+// Returns all Campus Captains and Staff Captains in the coordinator's school,
+// each annotated with the count of members they recruited.
+// =====================================================
+exports.getCoordinatorSchoolData = async (req, res) => {
+    try {
+        const coordinator = req.coordinator;
+
+        if (!coordinator || !coordinator.institution) {
+            return res.status(400).json({
+                success: false,
+                message: "Coordinator profile or institution is missing."
+            });
+        }
+
+        const institution = coordinator.institution;
+
+        // All captains in this institution
+        const captains = await Student.find({
+            institution,
+            volunteerPost: { $in: ["Campus Captains", "Staff Captains"] }
+        }).sort({ createdAt: -1 }).lean();
+
+        // All members (students/staff) in this institution
+        const members = await Student.find({
+            institution,
+            volunteerPost: { $in: ["Student", "Staff", "Members", "NFSAN Member"] }
+        }).sort({ createdAt: -1 }).lean();
+
+        // Annotate each captain with the number of members they recruited
+        const captainsWithCount = captains.map(cap => ({
+            ...cap,
+            memberCount: members.filter(m =>
+                (cap.couponCode && m.usedCouponCode === cap.couponCode) ||
+                (m.referredBy && m.referredBy.toString() === cap._id.toString())
+            ).length
+        }));
+
+        return res.status(200).json({
+            success: true,
+            coordinator: {
+                id: coordinator._id,
+                fullName: coordinator.fullName,
+                email: coordinator.email,
+                institution: coordinator.institution,
+                volunteerPost: coordinator.volunteerPost
+            },
+            institution,
+            captainCount: captains.length,
+            memberCount: members.length,
+            captains: captainsWithCount,
+            members
+        });
+
+    } catch (error) {
+        console.error("GET COORDINATOR SCHOOL DATA ERROR:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to retrieve school data.",
             error: error.message
         });
     }
