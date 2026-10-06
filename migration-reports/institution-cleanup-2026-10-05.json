@@ -1,0 +1,524 @@
+{
+  "generatedAt": "2026-10-05T10:58:18.716Z",
+  "totalScanned": 1558,
+  "alreadyNormalised": 1435,
+  "toUpdate": 19,
+  "unmatchedCount": 104,
+  "emptyCount": 0,
+  "changes": [
+    {
+      "_id": "6a27eb4ede1aa9aabb04e6ab",
+      "oldSchool": "Lagos state college of nursing igando",
+      "newSchool": "LASCON"
+    },
+    {
+      "_id": "6a290af1d2f6db84f8025928",
+      "oldSchool": "Lagos State College Of Nursing, Igando",
+      "newSchool": "LASCON"
+    },
+    {
+      "_id": "6a290bc0d2f6db84f8025929",
+      "oldSchool": "Lagos state college of nursing, Igando.",
+      "newSchool": "LASCON"
+    },
+    {
+      "_id": "6a290dcad2f6db84f802592a",
+      "oldSchool": "Lagos state college of nursing, Igando.",
+      "newSchool": "LASCON"
+    },
+    {
+      "_id": "6a2912f1dc62c1c3f325c4b9",
+      "oldSchool": "Lagos state college of nursing, Igando.",
+      "newSchool": "LASCON"
+    },
+    {
+      "_id": "6a29291a99b4d00755d00cd8",
+      "oldSchool": "Lagos state college of nursing, Igando.",
+      "newSchool": "LASCON"
+    },
+    {
+      "_id": "6a292c1f99b4d00755d00cd9",
+      "oldSchool": "Lagos state college of nursing, Igando.",
+      "newSchool": "LASCON"
+    },
+    {
+      "_id": "6a292f2299b4d00755d00cda",
+      "oldSchool": "Lagos state college of nursing, Igando.",
+      "newSchool": "LASCON"
+    },
+    {
+      "_id": "6a2934230cb4df62a84370b8",
+      "oldSchool": "Lagos state college of nursing, Igando.",
+      "newSchool": "LASCON"
+    },
+    {
+      "_id": "6a29532388bf0bb673bafebc",
+      "oldSchool": "Lagos state college of nursing igando",
+      "newSchool": "LASCON"
+    },
+    {
+      "_id": "6a2953a088bf0bb673bafebe",
+      "oldSchool": "Lagos state college of nursing, Igando.",
+      "newSchool": "LASCON"
+    },
+    {
+      "_id": "6a2958ed88bf0bb673bafec8",
+      "oldSchool": "Lagos State college of nursing,Igando.",
+      "newSchool": "LASCON"
+    },
+    {
+      "_id": "6a29592188bf0bb673bafec9",
+      "oldSchool": "Lagos state college of Nursing,igando.",
+      "newSchool": "LASCON"
+    },
+    {
+      "_id": "6a298202d65874911368424c",
+      "oldSchool": "Lagos state college of nursing igando",
+      "newSchool": "LASCON"
+    },
+    {
+      "_id": "6a2a66cdda8bb3dc83260b20",
+      "oldSchool": "Lagos state college of Nursing science , igando",
+      "newSchool": "LASCON"
+    },
+    {
+      "_id": "6a2bd71d3efbaa488f44c324",
+      "oldSchool": "Lagos state college of nursing igando",
+      "newSchool": "LASCON"
+    },
+    {
+      "_id": "6a2bd7333efbaa488f44c326",
+      "oldSchool": "Lagos state college of nursing Igando Lagos state.",
+      "newSchool": "LASCON"
+    },
+    {
+      "_id": "6a2bdb913efbaa488f44c328",
+      "oldSchool": "Lagos state college of nursing igando",
+      "newSchool": "LASCON"
+    },
+    {
+      "_id": "6a2c180a567dd54d5b681c0c",
+      "oldSchool": "Lagos state college of nursing, igando",
+      "newSchool": "LASCON"
+    }
+  ],
+  "unmatched": [
+    {
+      "_id": "6a0780dead5d3df95d168fe9",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a07834aad5d3df95d168ff1",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a07868bad5d3df95d168ff5",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a079324ad5d3df95d168ffd",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a079af0ad5d3df95d169005",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a07a0cbad5d3df95d169009",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a07a346ad5d3df95d16900a",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a07aa7858ecadf6bb4bc787",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a081943abb8f0763fbab071",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a081d13abb8f0763fbab073",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a08e0fdbc00db3c60ed2cdb",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a09eb772dac9fd92a7a5dc6",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a0ad661d9e2a3257640b31a",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a0add28f52967342137d99d",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a0b09398bcf800b2b41ade3",
+      "rawValue": "university"
+    },
+    {
+      "_id": "6a0b5cefa91a53fa9a1c928b",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a0c98e5a069ca89b40b23cb",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a0c9beda069ca89b40b23cc",
+      "rawValue": "College"
+    },
+    {
+      "_id": "6a0cb04e30b629723186e4cd",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a0d66c4becfc6e7ab09053f",
+      "rawValue": "College"
+    },
+    {
+      "_id": "6a0f11dd75333b7b7b855c79",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a1fdfa8dc432c8ce3ed5023",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a1fe7c2dc432c8ce3ed5027",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a205c3c78f333a6837bdeba",
+      "rawValue": "university"
+    },
+    {
+      "_id": "6a25422d72d6026efd3c025d",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a256120761004a62e2bf2c8",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a265f2797fc368a129beb91",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a26662a9a32fbcf7f1ada39",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a26a23a406bcdce1db74e9c",
+      "rawValue": "College"
+    },
+    {
+      "_id": "6a27bea97e32439c7e7744ef",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a27e572de1aa9aabb04e6a8",
+      "rawValue": "College"
+    },
+    {
+      "_id": "6a27e6bfde1aa9aabb04e6a9",
+      "rawValue": "college"
+    },
+    {
+      "_id": "6a294ca44abf433af6be10be",
+      "rawValue": "College"
+    },
+    {
+      "_id": "6a2be0df4370fa6407e519d1",
+      "rawValue": "College"
+    },
+    {
+      "_id": "6a2d480815c7c64b280c8e03",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a2d5e2cfcf5b3772a979791",
+      "rawValue": "Lagos state"
+    },
+    {
+      "_id": "6a2f223f3fec1f67c193465e",
+      "rawValue": "Polytechnic"
+    },
+    {
+      "_id": "6a2f252b3fec1f67c1934663",
+      "rawValue": "Polytechnic"
+    },
+    {
+      "_id": "6a35b1ecd234de45559a8195",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a35b88c229bdf1946d582de",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a3625a5dc3eee6d07f7bac5",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a368d06915b56ff38bc61ce",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a369a23d703beb5bc950618",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a36a4ce5a93d179ba99f928",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a36bc24fb48b022f241b158",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a37a114da5580170e2f79a4",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a37bd3fc80f589c3aaf73ab",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a37bdccc80f589c3aaf73af",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a37bdd5c80f589c3aaf73b0",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a37bed5c80f589c3aaf73b2",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a37bfa9c80f589c3aaf73b8",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a37c0bdc80f589c3aaf73bc",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a37c259c80f589c3aaf73be",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a37d95bf4f20d6343eff476",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a37f308b7eb27f04e54a4b5",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a37fe56b7eb27f04e54a4b9",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a380957fa9eb49c44af73fc",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a38dcf65e1e09d340ed7588",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a3997ac8d5a2d9f690d69df",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a3a36fe2982aa8107fc7dd3",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a3a878380dc18ee35cf732e",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a3e1e08fa2aaff25c7aed42",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a40080a39ded43662bf5c9e",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a4629df32a77d4b061fb5cc",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a4639ca32a77d4b061fb5fa",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a463a7f32a77d4b061fb5fe",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a463c5432a77d4b061fb603",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a463e8f32a77d4b061fb608",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a464f2632a77d4b061fb630",
+      "rawValue": "Lagos state polytechnic"
+    },
+    {
+      "_id": "6a464f5932a77d4b061fb632",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a466bbc178d09bc260b2698",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a466c45178d09bc260b269c",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a466ee0178d09bc260b26a6",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a4777a1a6113b2cfc3d982e",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a478478a6113b2cfc3d983a",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a47c070321c8ff09ef19598",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a4832d17a5c55435de32cbe",
+      "rawValue": "College"
+    },
+    {
+      "_id": "6a491ee6f3de685fc99d4a3c",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a4aa9ccd4e9ff835987c45e",
+      "rawValue": "College"
+    },
+    {
+      "_id": "6a4aacc4d4e9ff835987c460",
+      "rawValue": "College"
+    },
+    {
+      "_id": "6a4aad6bd4e9ff835987c462",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a4ad75ac746d2bf0cd09a08",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a4cf448e555280f3d0c2134",
+      "rawValue": "College"
+    },
+    {
+      "_id": "6a4e20c375f3247048615bcb",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a4e20f475f3247048615bcc",
+      "rawValue": "Collegy"
+    },
+    {
+      "_id": "6a4e22e275f3247048615bd0",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a4e35ef5a8f17de221d2158",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a4e5633b6f90de6924d516b",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a4eacaeb084a5e269dfb686",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a4eca7a53680459709c2697",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a5813351388522c3d7ef321",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a595067dc2f803c5873feff",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a5a2c18a643f35ca87f8659",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a5a31b0a643f35ca87f8665",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a5a8c86691a2b98eb03ca98",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a6256e93552722a22a2bf5f",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a6257b23552722a22a2bf60",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a6692a2902ef76c6d2bcc25",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a7340766bdb18699294f000",
+      "rawValue": "College"
+    },
+    {
+      "_id": "6a820ba58377c0ba81975dcf",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a820bcf8377c0ba81975dd0",
+      "rawValue": "University"
+    },
+    {
+      "_id": "6a83628d79bf6415076a5a4e",
+      "rawValue": "College"
+    },
+    {
+      "_id": "6a837bcc519a88527cbad483",
+      "rawValue": "College"
+    },
+    {
+      "_id": "6a837c61519a88527cbad485",
+      "rawValue": "College"
+    }
+  ],
+  "empty": []
+}
