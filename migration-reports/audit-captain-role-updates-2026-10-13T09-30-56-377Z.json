@@ -1,0 +1,304 @@
+{
+  "operation": "captain-role-updates",
+  "timestamp": "2026-10-13T09:30:56.377Z",
+  "admin": {
+    "id": "69f87fffbcc1cc27ef66d8e8",
+    "email": "psalmstringss@gmail.com",
+    "name": "Samuel Abimbola"
+  },
+  "retainedCount": 83,
+  "downgradedCount": 56,
+  "backupFile": "backup-captains-2026-10-13T09-30-55-789Z.json",
+  "downgradedStudents": [
+    {
+      "id": "6a0780dead5d3df95d168fe9",
+      "name": "ODERINDE IYANUOLUWA OPEOLUWA",
+      "institution": "University"
+    },
+    {
+      "id": "6a0781baad5d3df95d168fea",
+      "name": "OKEYCHUKWU DAVID SAMUEL",
+      "institution": "LASUED"
+    },
+    {
+      "id": "6a078243ad5d3df95d168fec",
+      "name": "Mubarak Afolabi",
+      "institution": "LASUED"
+    },
+    {
+      "id": "6a078302ad5d3df95d168fef",
+      "name": "Kareem Ibrahim Ayomide",
+      "institution": "LASUED"
+    },
+    {
+      "id": "6a07834aad5d3df95d168ff1",
+      "name": "Balogun Ibrahim",
+      "institution": "University"
+    },
+    {
+      "id": "6a0783a7ad5d3df95d168ff4",
+      "name": "Alawiye Sulaimon Gbolahan",
+      "institution": "LASUED"
+    },
+    {
+      "id": "6a079324ad5d3df95d168ffd",
+      "name": "AYANKANMI Jethro",
+      "institution": "University"
+    },
+    {
+      "id": "6a0794aaad5d3df95d168fff",
+      "name": "Alabidun Toha",
+      "institution": "LASUED"
+    },
+    {
+      "id": "6a081943abb8f0763fbab071",
+      "name": "Abel Omotoyosi Adeshola",
+      "institution": "University"
+    },
+    {
+      "id": "6a08d17a16e325ccde54a537",
+      "name": "Obaze Ambassador Ayomide",
+      "institution": "LASU"
+    },
+    {
+      "id": "6a08d24016e325ccde54a538",
+      "name": "Oluwatofunmi Ojelabi",
+      "institution": "LASU"
+    },
+    {
+      "id": "6a09bb9e83c7337c8c42c6c9",
+      "name": "Bello David",
+      "institution": "LASU"
+    },
+    {
+      "id": "6a09bd7a83c7337c8c42c6ca",
+      "name": "Kehinde Emmanuel Adebayo",
+      "institution": "LASU"
+    },
+    {
+      "id": "6a09eb772dac9fd92a7a5dc6",
+      "name": "ONIFADE AHMED OLORUNFEMI",
+      "institution": "University"
+    },
+    {
+      "id": "6a0cb04e30b629723186e4cd",
+      "name": "Agunmaro Semasa Oluwatobi",
+      "institution": "University"
+    },
+    {
+      "id": "6a1fcf0242169a833dc4dcd8",
+      "name": "Temidara Jesuyon olaoluwa",
+      "institution": "LASUSTECH"
+    },
+    {
+      "id": "6a1fd07f42169a833dc4dcdb",
+      "name": "OYEWOLE MUSTAPHA",
+      "institution": "LASUSTECH"
+    },
+    {
+      "id": "6a1fd13042169a833dc4dcdd",
+      "name": "Fakoya Olabode",
+      "institution": "LASUSTECH"
+    },
+    {
+      "id": "6a1fd99d42169a833dc4dce1",
+      "name": "Osodein Matthew dolapo",
+      "institution": "LASUSTECH"
+    },
+    {
+      "id": "6a1ffbc0a85ca74889ba1f11",
+      "name": "Sylvester Lucky",
+      "institution": "LASUSTECH"
+    },
+    {
+      "id": "6a2001913ec147b70f4c437c",
+      "name": "Salami Rukayat Oriyomi",
+      "institution": "LASUSTECH"
+    },
+    {
+      "id": "6a25422d72d6026efd3c025d",
+      "name": "Olaseni Eniola",
+      "institution": "University"
+    },
+    {
+      "id": "6a2c497cde9b6a87d3fd5301",
+      "name": "Agbaje Daramola",
+      "institution": "LASUSTECH"
+    },
+    {
+      "id": "6a2e50f90eb5d7aa8bd90135",
+      "name": "Otulana Ibrahim",
+      "institution": "LASUSTECH"
+    },
+    {
+      "id": "6a2f223f3fec1f67c193465e",
+      "name": "Busari Lateef Adejuwon",
+      "institution": "Polytechnic"
+    },
+    {
+      "id": "6a2f252b3fec1f67c1934663",
+      "name": "Oluokun simbiat oluwaseye",
+      "institution": "Polytechnic"
+    },
+    {
+      "id": "6a35b88c229bdf1946d582de",
+      "name": "Ajayi Stephen",
+      "institution": "University"
+    },
+    {
+      "id": "6a3997ac8d5a2d9f690d69df",
+      "name": "Yiseyon Gbenasu",
+      "institution": "University"
+    },
+    {
+      "id": "6a3a229f54423661330b2e92",
+      "name": "Obayomi Oluwatimilehin Dorcas",
+      "institution": "LASU"
+    },
+    {
+      "id": "6a3d12962300541b9ddd931e",
+      "name": "Salami Ayomiposi Clever",
+      "institution": "LASU"
+    },
+    {
+      "id": "6a45385861209a75e87cb31b",
+      "name": "Sulaimon Mariam omotoyosi",
+      "institution": "LASUSTECH"
+    },
+    {
+      "id": "6a454d9f2d212c785b90564c",
+      "name": "Salami Rukayat",
+      "institution": "LASUSTECH"
+    },
+    {
+      "id": "6a4638fd32a77d4b061fb5f7",
+      "name": "IRIKEFE OGHENETEGA VICTOR",
+      "institution": "LASUSTECH"
+    },
+    {
+      "id": "6a464e4932a77d4b061fb62b",
+      "name": "Adekola Bashiru Akande",
+      "institution": "LASUSTECH"
+    },
+    {
+      "id": "6a4764ceb689cf5c10267259",
+      "name": "Odion Oyewale",
+      "institution": "YABATECH"
+    },
+    {
+      "id": "6a48a8ccfd43594f1e540c98",
+      "name": "Bello Ahmed Sunkanmi",
+      "institution": "LASUSTECH"
+    },
+    {
+      "id": "6a48c7d059f47befba6cce74",
+      "name": "Chukwuemeka Christopher",
+      "institution": "LASUSTECH"
+    },
+    {
+      "id": "6a48c80d59f47befba6cce75",
+      "name": "Sadiq Olashile Mubaraq",
+      "institution": "LASUSTECH"
+    },
+    {
+      "id": "6a48c96b59f47befba6cce76",
+      "name": "Treeple Cee",
+      "institution": "LASUSTECH"
+    },
+    {
+      "id": "6a48d14cd44d6ae868da8ab8",
+      "name": "Shaffi Oladehinde Edu",
+      "institution": "LASUSTECH"
+    },
+    {
+      "id": "6a4e4a23accacddec512ab6d",
+      "name": "Oloruntoba Daniel",
+      "institution": "LASUSTECH"
+    },
+    {
+      "id": "6a4e93b0097fbc4e2fa54ebd",
+      "name": "Agboola Oluwatobi",
+      "institution": "YABATECH"
+    },
+    {
+      "id": "6a50f092627e59fd37ce7df9",
+      "name": "Oguntade Gbenga",
+      "institution": "LASUSTECH"
+    },
+    {
+      "id": "6a5a2dc4a643f35ca87f865b",
+      "name": "Ogunbiyi Stephen",
+      "institution": "YABATECH"
+    },
+    {
+      "id": "6a5a310ea643f35ca87f8663",
+      "name": "OLUYEMI SERAH OLAMIDE",
+      "institution": "YABATECH"
+    },
+    {
+      "id": "6a61d0005283c04b961f24ef",
+      "name": "ABUBAKR OLUWATOBI OJUBANIRE",
+      "institution": "LASUSTECH"
+    },
+    {
+      "id": "6a61e71d83f0c85552486883",
+      "name": "Bashua Muhammad Opeyemi",
+      "institution": "LASUSTECH"
+    },
+    {
+      "id": "6a81a2fbf5b17ba309eb735d",
+      "name": "SHUAIB ZAINAB OMOTOYOSI",
+      "institution": "LASU"
+    },
+    {
+      "id": "6a81b69d5c3374ccd59be35d",
+      "name": "Abdullahi Aliyat Monisola",
+      "institution": "LASU"
+    },
+    {
+      "id": "6a81f0a1825a0ac1414167e7",
+      "name": "Yusuf Azeezat",
+      "institution": "LASUSTECH"
+    },
+    {
+      "id": "6a82d2156fea2cec98e4c6c9",
+      "name": "Adesanya Micheal",
+      "institution": "LASUSTECH"
+    },
+    {
+      "id": "6a82da05c5e28bea133d2e60",
+      "name": "Adewusi Samuel",
+      "institution": "YABATECH"
+    },
+    {
+      "id": "6a82dbccc5e28bea133d2e61",
+      "name": "Shukurat Omotayo Lukman",
+      "institution": "LASUSTECH"
+    },
+    {
+      "id": "6a833acd1eaf4583d81ed848",
+      "name": "Caleb Erabor Osakwe",
+      "institution": "FCFMT"
+    },
+    {
+      "id": "6a8364ce79bf6415076a5a4f",
+      "name": "Kayode Azeezat olajumoke",
+      "institution": "LASCOETH"
+    },
+    {
+      "id": "6a83c4f24f606dd6570b90df",
+      "name": "Adegoke Muhammed ABIOLA",
+      "institution": "LASUSTECH"
+    }
+  ],
+  "verification": {
+    "preTotalStudents": 1566,
+    "postTotalStudents": 1566,
+    "studentCountPreserved": true,
+    "noAccountsDeleted": true,
+    "postCaptainsCount": 83,
+    "expectedCaptainsCount": 83,
+    "captainsCountMatches": true,
+    "downgradedCount": 56
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "operation": "institution-cleanup",
+  "timestamp": "2026-10-13T09:33:53.553Z",
+  "admin": {
+    "id": "69f87fffbcc1cc27ef66d8e8",
+    "email": "psalmstringss@gmail.com",
+    "name": "Samuel Abimbola"
+  },
+  "matchedCount": 94,
+  "modifiedCount": 94,
+  "ruleACount": 80,
+  "ruleBCount": 14,
+  "backupFile": "backup-institutions-2026-10-13T09-33-52-410Z.json",
+  "verification": {
+    "preTotalStudents": 1566,
+    "postTotalStudents": 1566,
+    "studentCountPreserved": true,
+    "remainingGenericUniversity": 0,
+    "remainingGenericCollege": 0,
+    "genericEliminated": true,
+    "lasuIncrease": 80,
+    "expectedLasuIncrease": 80,
+    "lasconIncrease": 14,
+    "expectedLasconIncrease": 14,
+    "noAccountsDeleted": true
+  }
+}

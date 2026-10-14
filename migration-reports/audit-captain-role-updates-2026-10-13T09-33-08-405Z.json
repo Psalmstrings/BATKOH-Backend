@@ -1,0 +1,119 @@
+{
+  "operation": "captain-role-updates",
+  "timestamp": "2026-10-13T09:33:08.405Z",
+  "admin": {
+    "id": "69f87fffbcc1cc27ef66d8e8",
+    "email": "psalmstringss@gmail.com",
+    "name": "Samuel Abimbola"
+  },
+  "retainedCount": 64,
+  "downgradedCount": 19,
+  "backupFile": "backup-captains-2026-10-13T09-33-07-799Z.json",
+  "downgradedStudents": [
+    {
+      "id": "6a080bbdd0683d847db2892c",
+      "name": "Aremu Muiz Ajibola",
+      "institution": "LASUED"
+    },
+    {
+      "id": "6a0811ebabb8f0763fbab06d",
+      "name": "Abayomi Samuel Ganiu",
+      "institution": "LASUED"
+    },
+    {
+      "id": "6a0816baabb8f0763fbab06f",
+      "name": "ADEBAYO MORUFU ADEYINKA",
+      "institution": "LASUED"
+    },
+    {
+      "id": "6a081863abb8f0763fbab070",
+      "name": "KAREEM MUMINI AKANBI",
+      "institution": "LASUED"
+    },
+    {
+      "id": "6a081b2eabb8f0763fbab072",
+      "name": "Showole Adewale",
+      "institution": "LASUED"
+    },
+    {
+      "id": "6a082ff1618c77752a4d5498",
+      "name": "Isiaka kehinde Idris",
+      "institution": "LASUED"
+    },
+    {
+      "id": "6a088d42948a43564a1e71ff",
+      "name": "Olukoya Temitayo Victor",
+      "institution": "LASUED"
+    },
+    {
+      "id": "6a0a316bd9ac8eecfa7155d4",
+      "name": "Jamal Sanyaolu",
+      "institution": "LASUED"
+    },
+    {
+      "id": "6a1832564c5b6db108acd38b",
+      "name": "Lawal Oluwapelumi Yusuf",
+      "institution": "LASUED"
+    },
+    {
+      "id": "6a3409e5df9cf5419c448ee4",
+      "name": "Ojoare Adedotun Abdulbaqi",
+      "institution": "LASUED"
+    },
+    {
+      "id": "6a356c7b6eb3d58ac0819353",
+      "name": "Baruwa Khadijah Iyabo",
+      "institution": "LASUED"
+    },
+    {
+      "id": "6a35acacd234de45559a818d",
+      "name": "Ogunleye ayomide olawale",
+      "institution": "LASUED"
+    },
+    {
+      "id": "6a368346ef943849d304213f",
+      "name": "Eruosi Fawaz Adeniji",
+      "institution": "LASUED"
+    },
+    {
+      "id": "6a36bdeffb48b022f241b159",
+      "name": "Arogundade Yesiroh Ayobami",
+      "institution": "LASUED"
+    },
+    {
+      "id": "6a37bdcac80f589c3aaf73ae",
+      "name": "JK QUEST",
+      "institution": "LASUED"
+    },
+    {
+      "id": "6a3e8c7029dccc06b7ebb7a3",
+      "name": "Joshua Olujide",
+      "institution": "LASUED"
+    },
+    {
+      "id": "6a3ededa1116b8b7acb81054",
+      "name": "Kehinde Busayo James",
+      "institution": "LASUED"
+    },
+    {
+      "id": "6a3ee04d1116b8b7acb81055",
+      "name": "Obafemi oluwasetemi adejobi",
+      "institution": "LASUED"
+    },
+    {
+      "id": "6a4bb3369df47c5bd83fbc6e",
+      "name": "Asorobi Kazeem Damilare",
+      "institution": "LASUED"
+    }
+  ],
+  "verification": {
+    "preTotalStudents": 1566,
+    "postTotalStudents": 1566,
+    "studentCountPreserved": true,
+    "noAccountsDeleted": true,
+    "postCaptainsCount": 64,
+    "expectedCaptainsCount": 64,
+    "captainsCountMatches": true,
+    "downgradedCount": 19
+  }
+}
