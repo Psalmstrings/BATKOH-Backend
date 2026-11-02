@@ -201,22 +201,50 @@ exports.createStudent = async (req, res) => {
 
 
         // =================================================
-        // MEMBERS / STUDENTS / STAFF
+        // STAFF REGISTRATION
+        // Must require a valid Staff Captain coupon code
+        // =================================================
+        else if (volunteerPost === "Staff") {
+
+            if (!usedCouponCode || usedCouponCode.trim() === "") {
+                return res.status(400).json({
+                    success: false,
+                    message: "Staff Captain coupon code is required for Staff registration."
+                });
+            }
+
+            const code = usedCouponCode.trim().toUpperCase();
+
+            // Must strictly belong to an authorized Staff Captain or Staff Coordinator
+            const referrer = await Student.findOne({
+                couponCode: code,
+                volunteerPost: { $in: ["Staff Captains", "Staff Coordinator"] }
+            });
+
+            if (!referrer) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid Staff Captain code. You must provide a valid coupon code assigned to a registered Staff Captain."
+                });
+            }
+
+            body.usedCouponCode = code;
+            body.referredBy = referrer._id;
+        }
+
+        // =================================================
+        // MEMBERS / STUDENTS
         // =================================================
         else if (
             volunteerPost === "Members" ||
             volunteerPost === "Student" ||
-            volunteerPost === "Staff" ||
             volunteerPost === "NFSAN Member"
         ) {
 
             if (!usedCouponCode || usedCouponCode.trim() === "") {
                 return res.status(400).json({
                     success: false,
-                    message:
-                        volunteerPost === "Staff"
-                            ? "Staff coupon code is required for Staff registration."
-                            : "Referral coupon code is required for Student and Staff registration."
+                    message: "Referral coupon code is required for Student registration."
                 });
             }
 
@@ -235,23 +263,14 @@ exports.createStudent = async (req, res) => {
             }
 
             if (!referrer) {
-                // When user picked "Staff", allow Staff code (e.g. STAFF-1234 or any code starting with STAFF)
-                if (volunteerPost === "Staff" && (code.startsWith("STAFF") || /^STAFF/i.test(code))) {
-                    body.usedCouponCode = code;
-                    body.referredBy = null;
-                } else {
-                    return res.status(400).json({
-                        success: false,
-                        message:
-                            volunteerPost === "Staff"
-                                ? "Invalid code. Please provide a valid Staff Captain code (e.g. STAFF-1234)."
-                                : "Invalid code. Please provide a valid Campus Coordinator, Campus Captain, or Staff Captain code."
-                    });
-                }
-            } else {
-                body.usedCouponCode = code;
-                body.referredBy = referrer._id;
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid code. Please provide a valid Campus Coordinator, Campus Captain, or Staff Captain code."
+                });
             }
+
+            body.usedCouponCode = code;
+            body.referredBy = referrer._id;
         }
 
         // =================================================
