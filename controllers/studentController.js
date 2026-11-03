@@ -275,34 +275,34 @@ exports.createStudent = async (req, res) => {
 
         // =================================================
         // PVC & VIN HANDLING
-        // VIN is REQUIRED for all registrations.
+        // VIN is OPTIONAL for now. Registrations can go through without VIN.
         // =================================================
-        if (!body.vin || typeof body.vin !== "string" || body.vin.trim() === "") {
-            return res.status(400).json({
-                success: false,
-                message: "Voter Identification Number (VIN) is required. Please enter your 17–20 character VIN."
-            });
+        if (body.vin && typeof body.vin === "string" && body.vin.trim() !== "") {
+            body.vin = body.vin.trim().toUpperCase();
+
+            if (!/^[A-Z0-9]{17,20}$/.test(body.vin)) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid Voter Identification Number (VIN). VIN must contain only letters and numbers and be between 17 and 20 characters."
+                });
+            }
+
+            // VIN uniqueness check at application level
+            if (await isVinTaken(body.vin)) {
+                return res.status(409).json({
+                    success: false,
+                    message: "This VIN is already registered to another member. Please check and re-enter your VIN."
+                });
+            }
+
+            body.hasPvc = true;
+            body.receivedBursary = true;
+        } else {
+            // If VIN is not provided, remove it so sparse unique index does not conflict
+            delete body.vin;
+            body.hasPvc = body.hasPvc || false;
+            body.receivedBursary = false;
         }
-
-        body.vin = body.vin.trim().toUpperCase();
-
-        if (!/^[A-Z0-9]{17,20}$/.test(body.vin)) {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid Voter Identification Number (VIN). VIN must contain only letters and numbers and be between 17 and 20 characters."
-            });
-        }
-
-        // VIN uniqueness check at application level
-        if (await isVinTaken(body.vin)) {
-            return res.status(409).json({
-                success: false,
-                message: "This VIN is already registered to another member. Please check and re-enter your VIN."
-            });
-        }
-
-        body.hasPvc = true;
-        body.receivedBursary = true;
 
         // Default stateResidence to stateOfRegistration if not provided
         if (!body.stateResidence && body.stateOfRegistration) {

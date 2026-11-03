@@ -169,7 +169,7 @@ const studentSchema = new mongoose.Schema(
       uppercase: true,
       unique: true,
       sparse: true,
-      required: true,
+      required: false,
       validate: {
         validator: function (v) {
           if (!v || v.trim() === "") return true;
