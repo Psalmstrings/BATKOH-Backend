@@ -21,32 +21,54 @@ if (!process.env.MONGO_URI) {
 
 connectDB();
 
-
 const app = express();
+
+// ─── TRUST PROXY (Critical for Render, Heroku, Cloudflare) ────────────────────
+// Allows express-rate-limit and req.ip to identify the real client IP via X-Forwarded-For
+app.set("trust proxy", 1);
 
 // ─── SECURITY HEADERS (Helmet) ────────────────────────────────────────────────
 app.use(helmet());
 
-// ─── CORS — Strict Origin Whitelist ───────────────────────────────────────────
+// ─── CORS — Comprehensive Origin Handler ──────────────────────────────────────
 const ALLOWED_ORIGINS = [
-  // Production frontend (update with your actual deployed frontend URLs)
+  // Production frontend domains
+  "https://batkohsa.org",
+  "https://www.batkohsa.org",
   "https://batkoh.netlify.app",
   "https://www.batkoh.com",
+  "https://batkoh.com",
   "https://batkoh-backend.onrender.com",
-  "https://batkohsa.org",
   "https://batkoh-frontend.vercel.app",
-  // Local development
+  // Local development ports
   "http://localhost:3000",
   "http://localhost:5500",
   "http://127.0.0.1:5500",
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+  "http://localhost:8000",
+  "http://127.0.0.1:8000",
+  "http://localhost:8080",
+  "http://127.0.0.1:8080",
 ];
+
+const isOriginAllowed = (origin) => {
+  if (!origin) return true; // allow mobile apps, curl, server-to-server
+  if (ALLOWED_ORIGINS.includes(origin)) return true;
+  if (/^https?:\/\/(.*\.)?batkohsa\.org$/.test(origin)) return true;
+  if (/^https?:\/\/(.*\.)?batkoh\.com$/.test(origin)) return true;
+  if (/^https?:\/\/[a-zA-Z0-9-]+\.netlify\.app$/.test(origin)) return true;
+  if (/^https?:\/\/[a-zA-Z0-9-]+\.vercel\.app$/.test(origin)) return true;
+  if (/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) return true;
+  return false;
+};
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      // Allow requests with no origin (mobile apps, Postman during dev)
-      if (!origin) return callback(null, true);
-      if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
+      if (isOriginAllowed(origin)) {
+        return callback(null, true);
+      }
       return callback(new Error("CORS policy: origin not allowed"), false);
     },
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -59,33 +81,44 @@ app.use(
 app.use(express.json({ limit: "20mb" }));
 app.use(express.urlencoded({ extended: true, limit: "20mb" }));
 
-
 // ─── RATE LIMITERS ────────────────────────────────────────────────────────────
-// General API — 100 req / 15 min per IP
+// General API — 2,000 req / 15 min per IP (prevents multi-tab / bulk navigation starvation)
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: 2000,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { error: "Too many requests. Please try again after 15 minutes." },
+  skip: (req) => req.method === "OPTIONS",
+  message: {
+    success: false,
+    message: "Too many requests from this network. Please try again after 15 minutes.",
+  },
 });
 
-// Login endpoints — 10 attempts / 15 min per IP
+// Login endpoints — 120 attempts / 15 min per IP
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10,
+  max: 120,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { error: "Too many login attempts. Please try again after 15 minutes." },
+  skip: (req) => req.method === "OPTIONS",
+  message: {
+    success: false,
+    message: "Too many login attempts from this network. Please wait a few minutes and try again.",
+  },
 });
 
-// Registration — 200 registrations / hour per IP
+// Registration — 300 registrations / hour per IP
 const registrationLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
-  max: 200,
+  max: 300,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { error: "Too many registrations from this IP. Please try again after 1 hour." },
+  skip: (req) => req.method === "OPTIONS",
+  message: {
+    success: false,
+    message: "Too many registrations from this IP. Please try again after 1 hour.",
+  },
 });
 
 // Apply general limiter to all routes
@@ -98,18 +131,23 @@ app.use("/api/admin/login", loginLimiter);
 app.use("/api/students", studentRoutes);
 app.use("/api/admin", adminRoutes);
 
+// ─── HEALTH CHECK ROUTE ───────────────────────────────────────────────────────
+app.get("/api/health", (req, res) => {
+  res.status(200).json({ status: "healthy", timestamp: new Date().toISOString() });
+});
+
 // ─── 404 HANDLER ─────────────────────────────────────────────────────────────
 app.use((req, res) => {
-  res.status(404).json({ error: "Route not found" });
+  res.status(404).json({ success: false, message: "Route not found" });
 });
 
 // ─── GLOBAL ERROR HANDLER ─────────────────────────────────────────────────────
 app.use((err, req, res, next) => {
   console.error(err.stack);
   if (err.message && err.message.includes("CORS")) {
-    return res.status(403).json({ error: err.message });
+    return res.status(403).json({ success: false, message: err.message });
   }
-  res.status(500).json({ error: "Internal server error" });
+  res.status(500).json({ success: false, message: "Internal server error" });
 });
 
 // ─── START SERVER ─────────────────────────────────────────────────────────────
