@@ -158,25 +158,22 @@ exports.createStudent = async (req, res) => {
 
 
         // =================================================
-        // CAMPUS CAPTAIN
+        // CAMPUS CAPTAIN (Open Self-Registration)
         // =================================================
         else if (volunteerPost === "Campus Captains") {
 
             if (usedCouponCode && usedCouponCode.trim() !== "") {
                 const coordinator = await Student.findOne({
                     couponCode: usedCouponCode.trim().toUpperCase(),
-                    volunteerPost: "Campus Coordinators"
+                    volunteerPost: { $in: ["Campus Coordinators", "Staff Coordinator", "State Coordinator", "Deputy Coordinator"] }
                 });
 
-                if (!coordinator) {
-                    return res.status(400).json({
-                        success: false,
-                        message: "Invalid Campus Coordinator coupon code."
-                    });
+                if (coordinator) {
+                    body.usedCouponCode = usedCouponCode.trim().toUpperCase();
+                    body.referredBy = coordinator._id;
+                } else {
+                    delete body.usedCouponCode;
                 }
-
-                body.usedCouponCode = usedCouponCode.trim().toUpperCase();
-                body.referredBy = coordinator._id;
             } else {
                 delete body.usedCouponCode;
             }
@@ -186,12 +183,22 @@ exports.createStudent = async (req, res) => {
 
 
         // =================================================
-        // STAFF CAPTAIN
+        // STAFF CAPTAIN (Open Self-Registration)
         // =================================================
         else if (volunteerPost === "Staff Captains") {
 
             if (usedCouponCode && usedCouponCode.trim() !== "") {
-                body.usedCouponCode = usedCouponCode.trim().toUpperCase();
+                const coordinator = await Student.findOne({
+                    couponCode: usedCouponCode.trim().toUpperCase(),
+                    volunteerPost: { $in: ["Staff Coordinator", "Campus Coordinators", "State Coordinator", "Deputy Coordinator"] }
+                });
+
+                if (coordinator) {
+                    body.usedCouponCode = usedCouponCode.trim().toUpperCase();
+                    body.referredBy = coordinator._id;
+                } else {
+                    delete body.usedCouponCode;
+                }
             } else {
                 delete body.usedCouponCode;
             }
