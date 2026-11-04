@@ -160,19 +160,18 @@ const studentSchema = new mongoose.Schema(
       default: false,
     },
 
-    // Voter Identification Number — Nigerian INEC
+    // Voter Identification Number — Nigerian INEC (Compulsory)
     // Must be 17–20 alphanumeric characters.
-    // unique + sparse so multiple empty/null values are allowed.
     vin: {
       type: String,
       trim: true,
       uppercase: true,
       unique: true,
       sparse: true,
-      required: false,
+      required: [true, "Voter Identification Number (VIN) is compulsory."],
       validate: {
         validator: function (v) {
-          if (!v || v.trim() === "") return true;
+          if (!v || v.trim() === "") return false;
           return /^[A-Z0-9]{17,20}$/.test(v.trim().toUpperCase());
         },
         message:
