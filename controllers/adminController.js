@@ -7,10 +7,38 @@ const createToken = (id) => {
     return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "7d" });
 };
 
-// Signup controller
+// Signup controller (Protected: requires existing admin authorization)
 exports.signup = async (req, res) => {
     try {
-        const { fullName, email, password } = req.body;
+        const { fullName, email, password, adminSecret } = req.body;
+        const authHeader = req.headers.authorization;
+
+        // Verify either existing admin token OR valid admin secret
+        let isAuthorized = false;
+        if (req.user && req.user.role === "admin") {
+            isAuthorized = true;
+        } else if (authHeader && authHeader.startsWith("Bearer ")) {
+            try {
+                const token = authHeader.split(" ")[1];
+                const decoded = jwt.verify(token, process.env.JWT_SECRET);
+                const adminUser = await Admin.findById(decoded.id);
+                if (adminUser) isAuthorized = true;
+            } catch (e) {
+                // Invalid token
+            }
+        }
+
+        const validSecret = process.env.ADMIN_SIGNUP_SECRET || "PBAT_KOH_ADMIN_SECURE_2027";
+        if (adminSecret && adminSecret === validSecret) {
+            isAuthorized = true;
+        }
+
+        if (!isAuthorized) {
+            return res.status(403).json({
+                status: "error",
+                msg: "Access denied. Only authorized administrators can create new admin accounts."
+            });
+        }
 
         if (!fullName || !email || !password) {
             return res.status(400).json({
@@ -20,7 +48,7 @@ exports.signup = async (req, res) => {
         }
 
         // Check if admin already exists
-        const existing = await Admin.findOne({ email });
+        const existing = await Admin.findOne({ email: email.trim().toLowerCase() });
         if (existing) {
             return res.status(400).json({
                 status: "error",
@@ -33,7 +61,11 @@ exports.signup = async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, salt);
 
         // Create admin
-        const admin = await Admin.create({ fullName, email, password: hashedPassword });
+        const admin = await Admin.create({
+            fullName: fullName.trim(),
+            email: email.trim().toLowerCase(),
+            password: hashedPassword
+        });
 
         res.status(201).json({
             status: "success",

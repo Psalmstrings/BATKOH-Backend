@@ -58,6 +58,7 @@ exports.verifyCaptain = async (req, res, next) => {
     }
 
     req.captain = captain;
+    req.user = captain;
     next();
   } catch (error) {
     return res.status(401).json({
@@ -83,7 +84,13 @@ exports.verifyCoordinator = async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     const coordinator = await Student.findById(decoded.id);
-    if (!coordinator || !["Campus Coordinators", "Staff Coordinator"].includes(coordinator.volunteerPost)) {
+    const allowedCoordinatorPosts = [
+      "Campus Coordinators",
+      "Staff Coordinator",
+      "State Coordinator",
+      "Deputy Coordinator"
+    ];
+    if (!coordinator || !allowedCoordinatorPosts.includes(coordinator.volunteerPost)) {
       return res.status(403).json({
         success: false,
         message: "Access denied. You must be an authorized Coordinator.",
@@ -91,6 +98,7 @@ exports.verifyCoordinator = async (req, res, next) => {
     }
 
     req.coordinator = coordinator;
+    req.user = coordinator;
     next();
   } catch (error) {
     return res.status(401).json({

@@ -90,9 +90,12 @@ const studentSchema = new mongoose.Schema(
         "SACOED",
         "LASCON",
         "LASCOETH",
+        "LASCOHET",
         "LASUSTECH",
         "LASUED",
         "FCFMT",
+        "COOP-COLLEGE",
+        "LASCOCO",
     ],
     },
 

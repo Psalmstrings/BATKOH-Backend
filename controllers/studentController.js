@@ -466,24 +466,22 @@ exports.deleteStudent = async (req, res) => {
             });
         }
 
-        // If captain deleted — unlink their members
-        if (
-            ["Campus Captains", "Staff Captains"].includes(deletedStudent.volunteerPost) &&
-            deletedStudent.couponCode
-        ) {
-            await Student.updateMany(
-                { usedCouponCode: deletedStudent.couponCode },
-                { $unset: { referredBy: "" } }
-            );
-
-            return res.status(200).json({
-                success: true,
-                message: `Captain deleted successfully. Members who used coupon code '${deletedStudent.couponCode}' have been unlinked.`,
-                data: deletedStudent
-            });
+        // Clean unlinking hook: safely unset referredBy foreign keys so no orphaned ObjectIds remain
+        const unlinkQuery = {
+            $or: [
+                { referredBy: deletedStudent._id }
+            ]
+        };
+        if (deletedStudent.couponCode) {
+            unlinkQuery.$or.push({ usedCouponCode: deletedStudent.couponCode });
         }
+        await Student.updateMany(unlinkQuery, { $unset: { referredBy: "" } });
 
-        res.status(200).json({ success: true, message: "Student deleted successfully", data: deletedStudent });
+        res.status(200).json({
+            success: true,
+            message: "Student deleted successfully. Any attributed recruitment links were safely unlinked.",
+            data: deletedStudent
+        });
 
     } catch (err) {
         if (err.name === "CastError") {
@@ -1060,7 +1058,7 @@ exports.coordinatorLogin = async (req, res) => {
         const normalizedEmail = email.trim().toLowerCase();
         const coordinator = await Student.findOne({
             email: normalizedEmail,
-            volunteerPost: { $in: ["Campus Coordinators", "Staff Coordinator"] }
+            volunteerPost: { $in: ["Campus Coordinators", "Staff Coordinator", "State Coordinator", "Deputy Coordinator"] }
         });
 
         if (!coordinator) {
@@ -1181,5 +1179,56 @@ exports.getCoordinatorSchoolData = async (req, res) => {
             message: "Failed to retrieve school data.",
             error: error.message
         });
+    }
+};
+
+
+// =====================================================
+// CHANGE PASSWORD (CAPTAIN & COORDINATOR SELF-SERVICE)
+// =====================================================
+exports.changePassword = async (req, res) => {
+    try {
+        const userId = req.user?._id || req.user?.id || req.captain?._id || req.coordinator?._id;
+        const { currentPassword, newPassword } = req.body;
+
+        if (!userId) {
+            return res.status(401).json({ success: false, message: "Authentication required." });
+        }
+
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({ success: false, message: "Both current and new passwords are required." });
+        }
+
+        if (newPassword.length < 6) {
+            return res.status(400).json({ success: false, message: "New password must be at least 6 characters." });
+        }
+
+        const student = await Student.findById(userId);
+        if (!student) {
+            return res.status(404).json({ success: false, message: "User account not found." });
+        }
+
+        let isMatch = false;
+        if (student.password) {
+            isMatch = await bcrypt.compare(currentPassword, student.password);
+        } else {
+            const firstName = getFirstName(student.fullName);
+            isMatch = currentPassword.trim().toLowerCase() === firstName.toLowerCase();
+        }
+
+        if (!isMatch) {
+            return res.status(400).json({ success: false, message: "Current password is incorrect." });
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        student.password = await bcrypt.hash(newPassword, salt);
+        await student.save();
+
+        res.status(200).json({
+            success: true,
+            message: "Password changed successfully! You can now use your new password."
+        });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Server error", error: err.message });
     }
 };

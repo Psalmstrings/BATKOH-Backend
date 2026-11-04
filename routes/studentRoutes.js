@@ -17,6 +17,7 @@ const {
   updateStudentByAdmin,
   coordinatorLogin,
   getCoordinatorSchoolData,
+  changePassword,
 } = require("../controllers/studentController");
 const checkExistingStudent = require("../middlewares/checkExistingStudent");
 const { verifyAdmin, verifyCaptain, verifyCoordinator } = require("../middlewares/authMiddleware");
@@ -44,10 +45,12 @@ const router = express.Router();
 router.post("/captain-login", captainLogin);
 router.get("/captain/members", verifyCaptain, getCaptainMembers);
 router.put("/captain/member/:id", verifyCaptain, updateCaptainMember);
+router.put("/captain/change-password", verifyCaptain, changePassword);
 
 // 1b. COORDINATOR AUTH & PORTAL ROUTES (public login, protected read-only data)
 router.post("/coordinator-login", coordinatorLogin);
 router.get("/coordinator/school", verifyCoordinator, getCoordinatorSchoolData);
+router.put("/coordinator/change-password", verifyCoordinator, changePassword);
 
 // 2. SEARCH ROUTES (admin-only — contains sensitive PII)
 router.get("/search/name", verifyAdmin, searchByName);
