@@ -54,6 +54,8 @@ const APPROVED_CODES = [
   "LASUSTECH",
   "LASUED",
   "FCFMT",
+  "LASCOCO",
+  "COOP-COLLEGE",
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
